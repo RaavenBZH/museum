@@ -1,0 +1,23 @@
+# Dependencies and build output are produced inside the image
+node_modules
+dist
+dist-ssr
+coverage
+
+# Version control and editor state
+.git
+.gitignore
+.idea
+.vscode
+
+# Local context folder, never part of the image
+.local
+
+# Docker files themselves
+Dockerfile
+.dockerignore
+compose.yaml
+
+# OS and log noise
+.DS_Store
+*.log

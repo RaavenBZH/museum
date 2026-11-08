@@ -1,0 +1,23 @@
+# Dossier de contexte local (non versionné)
+.local/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build & dependencies
+node_modules/
+dist/
+dist-ssr/
+*.log
+
+# Test artifacts
+coverage/
+
+# Local environment overrides (ports, see .env.example)
+.env
+.env.local

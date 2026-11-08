@@ -1,0 +1,56 @@
+name: met-museum-explorer
+
+services:
+  # Default service: `docker compose up` starts the development server.
+  #
+  # Only the sources are mounted, never the whole tree: node_modules then stays
+  # the one installed in the image, with no volume to hold stale packages. The
+  # consequence is explicit and documented in the README — changing a dependency
+  # means `docker compose up --build`, which reinstalls from the lockfile.
+  web:
+    build:
+      context: .
+      target: development
+    ports:
+      # Host port is overridable, because 5173 is a common default that another
+      # project may already hold. See .env.example.
+      - "${MUSEUM_WEB_PORT:-5173}:5173"
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+      - ./index.html:/app/index.html
+      - ./vite.config.ts:/app/vite.config.ts
+      - ./tsconfig.json:/app/tsconfig.json
+      - ./tsconfig.app.json:/app/tsconfig.app.json
+      - ./tsconfig.node.json:/app/tsconfig.node.json
+      - ./components.json:/app/components.json
+    environment:
+      # Bind-mounted files do not emit reliable filesystem events on macOS and
+      # Windows, so the watcher polls instead.
+      VITE_WATCH_POLLING: "true"
+
+  # `docker compose run --rm checks` runs lint, type checking and the tests
+  # against the current sources.
+  checks:
+    profiles: ["checks"]
+    build:
+      context: .
+      target: checks
+    volumes:
+      - ./src:/app/src
+      - ./index.html:/app/index.html
+      - ./vite.config.ts:/app/vite.config.ts
+      - ./tsconfig.json:/app/tsconfig.json
+      - ./tsconfig.app.json:/app/tsconfig.app.json
+      - ./tsconfig.node.json:/app/tsconfig.node.json
+      - ./eslint.config.js:/app/eslint.config.js
+
+  # `docker compose --profile production up` serves the production build.
+  # No mount at all, so it is always a clean build of the committed sources.
+  production:
+    profiles: ["production"]
+    build:
+      context: .
+      target: production
+    ports:
+      - "${MUSEUM_PRODUCTION_PORT:-8080}:80"
