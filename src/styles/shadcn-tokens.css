@@ -1,0 +1,70 @@
+/*
+ * shadcn/ui bridge.
+ *
+ * shadcn components are generated against their own variable names. Mapping
+ * those names onto the design system tokens keeps every component we vendor
+ * inside the Sand / Cocoa palette, in both modes, without touching the
+ * generated files.
+ *
+ * Two deliberate deviations, because the palette has no colour for them:
+ *   - `destructive` reuses the accent; danger is carried by wording, never by
+ *     colour alone.
+ *   - shadcn's `accent` (its hover surface) is NOT mapped, because the design
+ *     system owns `--color-accent` for the terracotta. A vendored component
+ *     using `bg-accent` / `text-accent-foreground` must be switched to
+ *     `bg-surface-muted` / `text-text`.
+ */
+:root {
+  --background: var(--color-bg);
+  --foreground: var(--color-text);
+  --card: var(--color-surface);
+  --card-foreground: var(--color-text);
+  --popover: var(--color-surface);
+  --popover-foreground: var(--color-text);
+  --primary: var(--color-accent);
+  --primary-foreground: var(--color-on-accent);
+  --secondary: var(--color-surface-muted);
+  --secondary-foreground: var(--color-text);
+  --muted: var(--color-surface-muted);
+  --muted-foreground: var(--color-text-muted);
+  --destructive: var(--color-accent);
+  --border: var(--color-surface-muted);
+  --input: var(--color-surface-muted);
+  --ring: var(--color-accent);
+  --radius: var(--radius-card);
+
+  /* Chart series, read by the shadcn/ui Chart component. Each one is an
+   * existing semantic token, so the series follow the mode automatically and
+   * no colour outside the palette enters a visualisation. They are ordered by
+   * decreasing prominence; colour is never the only way a series is
+   * identified. */
+  --chart-1: var(--color-accent);
+  --chart-2: var(--color-text-muted);
+  --chart-3: var(--color-text-subtle);
+  --chart-4: var(--color-inverse-muted);
+  --chart-5: var(--color-text);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+}

@@ -1,10 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Museum">
-  <rect width="32" height="32" rx="6" fill="#1c1917" />
-  <g fill="#fafaf9">
-    <path d="M16 5 5.5 11v1.6h21V11z" />
-    <rect x="8" y="14.5" width="2.6" height="9" />
-    <rect x="14.7" y="14.5" width="2.6" height="9" />
-    <rect x="21.4" y="14.5" width="2.6" height="9" />
-    <rect x="5.5" y="25" width="21" height="2.2" rx="0.6" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Met Museum Explorer">
+  <!--
+    The logotype mark of the design system, at its natural 19 x 23 size and
+    scaled to fill the square. A favicon is its own document, so the palette
+    is repeated as literal values here: they are the Sand and Cocoa values of
+    the text and accent tokens, swapped by the mirror rule.
+  -->
+  <style>
+    .mark-text { fill: #1E130E }
+    .mark-accent { fill: #B5482A }
+    @media (prefers-color-scheme: dark) {
+      .mark-text { fill: #FAF6F1 }
+      .mark-accent { fill: #E8714B }
+    }
+  </style>
+  <g transform="translate(4.6 2.2) scale(1.2)">
+    <rect class="mark-text" y="0" width="8" height="12" rx="2" />
+    <rect class="mark-accent" x="11" y="0" width="8" height="8" rx="2" />
+    <rect class="mark-accent" y="15" width="8" height="8" rx="2" />
+    <rect class="mark-text" x="11" y="11" width="8" height="12" rx="2" />
   </g>
 </svg>
