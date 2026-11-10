@@ -207,6 +207,7 @@ listed, including the parts of this README.
 | API exploration | Measured field fill rates across six departments and found three traps: the object payload's `isOnView` field is wrong, the `isPublicDomain` search filter is ignored, and the real rate limit is an IP block rather than the documented 80 requests per second | Reviewed the findings and chose what to keep |
 | Bug fixing | Found and fixed its own defects: a `node_modules` volume that retained removed packages, duplicate `Cache-Control` headers, a deprecated `baseUrl`, three unused dependencies, a leftover placeholder favicon | Reviewed |
 | Design system | Wrote the specification under my direction, then installed it: the tokens, the two modes, the type scale, the logotype and favicon, the first components and `docs/DESIGN_SYSTEM.md` | **Decided** the visual direction and the constraints it had to satisfy; chose the terracotta accent pair; reviewed the result in both modes |
+| Code review | Reviews each component it writes against the two references it must follow — `docs/DESIGN_SYSTEM.md` and the React practices document — and reports every raw colour, off-scale spacing, accessibility slip and rule violation, so that files written at different moments stay harmonised | Asked for that review to run on every interface change before a commit; decided which findings to apply |
 
 Three guidance documents used while building the project are kept outside the
 repository: one on the assignment and one on React practices, both produced with

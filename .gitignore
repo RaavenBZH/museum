@@ -21,3 +21,7 @@ coverage/
 # Local environment overrides (ports, see .env.example)
 .env
 .env.local
+
+# Component playground: a local development playground
+/playground.html
+/src/playground/

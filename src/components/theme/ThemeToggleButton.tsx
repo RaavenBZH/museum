@@ -12,6 +12,7 @@ export function ThemeToggleButton() {
 
   return (
     <Button
+      variant="secondary"
       className="theme-toggle-button"
       aria-label={`Switch to ${THEME_MODE_LABELS[nextMode]} mode`}
       onClick={() => setMode(nextMode)}

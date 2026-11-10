@@ -30,6 +30,13 @@
   --color-inverse-text: #faf6f1;
   --color-inverse-muted: #c4ae9f;
 
+  /* Hover surfaces. One step of the same hue, never a new colour: in Sand the
+   * surface goes down a step, in Cocoa it goes up, so that in both modes a
+   * hovered button moves away from its background instead of towards it. */
+  --color-accent-hover: #9d3d23;
+  --color-surface-muted-hover: #e5d9cc;
+  --color-inverse-text-hover: #efe8e0;
+
   /* Typefaces. The monospace family is reserved for figures (artwork
    * dimensions, counters) and never used for prose or headings. */
   --font-sans: 'Inter Tight Variable', 'Inter Tight', system-ui, sans-serif;
@@ -128,6 +135,9 @@
   --color-inverse-bg: #ece3d9;
   --color-inverse-text: #1e130e;
   --color-inverse-muted: #5e4a3e;
+  --color-accent-hover: #f08560;
+  --color-surface-muted-hover: #483327;
+  --color-inverse-text-hover: #2e201a;
   color-scheme: dark;
 }
 
@@ -144,6 +154,9 @@
     --color-inverse-bg: #ece3d9;
     --color-inverse-text: #1e130e;
     --color-inverse-muted: #5e4a3e;
+    --color-accent-hover: #f08560;
+    --color-surface-muted-hover: #483327;
+    --color-inverse-text-hover: #2e201a;
     color-scheme: dark;
   }
 }
