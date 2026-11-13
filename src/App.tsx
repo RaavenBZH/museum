@@ -1,23 +1,39 @@
+import type { MainNavigationItem } from '@/components/layout/MainNavigation';
 import { AppFooter } from '@/components/layout/AppFooter';
 import { AppHeader } from '@/components/layout/AppHeader';
+import { HomePage } from '@/pages/HomePage';
 
+/**
+ * The destinations of the bar, in order: the home, then the three modes of the
+ * product.
+ *
+ * The home is a screen of its own and not one of the modes: it presents them
+ * and shows a first set of artworks, which is why the logotype and `Home` lead
+ * to the same place while `Discover` has its own route. That screen is the one
+ * the home's main action opens, so it does not exist yet.
+ */
+const MAIN_NAVIGATION: readonly MainNavigationItem[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Discover', href: '/discover' },
+  { label: 'My Gallery', href: '/gallery' },
+  { label: 'Play', href: '/play' },
+];
+
+/** The screen the shell is showing; it becomes the router's business later. */
+const CURRENT_HREF = '/';
+
+/**
+ * The page shell: the bar, the screen, the footer. It shows the home page,
+ * since the application has no router yet; the screen it renders is the only
+ * thing that will change when it gains one.
+ */
 export function App() {
   return (
     <div className="app-shell mx-auto flex min-h-dvh w-full max-w-page flex-col px-4 desktop:px-10">
-      <AppHeader />
+      <AppHeader navigation={MAIN_NAVIGATION} currentHref={CURRENT_HREF} />
 
-      <main className="app-shell__main flex flex-1 flex-col gap-5 py-10">
-        <h1 className="app-shell__title max-w-[480px] text-hero">
-          Learn the collection.
-          <br />
-          <span className="app-shell__title-second-line text-text-subtle">
-            One artwork at a time.
-          </span>
-        </h1>
-        <p className="app-shell__lead max-w-[480px] text-lead text-text-muted">
-          Discover the Metropolitan Museum of Art collection one artwork at a time, and build a
-          gallery of everything you have seen.
-        </p>
+      <main className="app-shell__main flex flex-1 flex-col py-6">
+        <HomePage />
       </main>
 
       <AppFooter />

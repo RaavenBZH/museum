@@ -1,3 +1,5 @@
+import { cn } from '@/lib/utils';
+
 /**
  * The logotype: a four-bar mark followed by the product name.
  *
@@ -51,5 +53,25 @@ export function BrandLogo() {
       </svg>
       <span className="brand-logo__name">Met Museum Explorer</span>
     </span>
+  );
+}
+
+/**
+ * The logotype as a link home, which is what it is in the header: clicking a
+ * product's name is the one way back every site has, so the bar offers it
+ * twice on purpose — here and on its `Home` item.
+ *
+ * Only the bar carries the current-page mark, so this link has no
+ * `aria-current`: two marked links for one destination would say the same
+ * thing twice to a screen reader.
+ *
+ * It is a real anchor, like `ButtonLink`, so it keeps its keyboard behaviour,
+ * its context menu and its middle click.
+ */
+export function BrandLogoLink({ className }: { className?: string }) {
+  return (
+    <a className={cn('brand-logo-link inline-flex no-underline', className)} href="/">
+      <BrandLogo />
+    </a>
   );
 }
