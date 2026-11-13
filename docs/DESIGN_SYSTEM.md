@@ -88,6 +88,11 @@ character. A large heading without it is a mistake.
 Headlines run over two lines, the first in `--color-text` and the second in
 `--color-text-subtle`, and end with a full stop.
 
+The names of this scale are declared to the class merger in
+[`src/lib/utils.ts`](../src/lib/utils.ts). Without that list it reads
+`text-caption-short` as a colour and drops it as soon as the same element also
+sets `text-inverse-text`, which leaves the element at the inherited size: add
+every new `--text-*` token there.
 
 ## Spacing, page shell and radii
 
@@ -396,8 +401,10 @@ carries meaning:
 
 A `rounded-pill` container on `--color-surface` with 4 px padding and 4 px
 between links. Each link is at least 40 px tall with 16 px of horizontal
-padding, in 14 px / 500. The current link takes `--color-inverse-bg` and
-`--color-inverse-text`, **and** `aria-current="page"`, so the mark does not
+padding, in 14 px / 600 — every link carries the weight explicitly, the current
+one included, so the word neither grows nor moves its neighbours when the
+destination changes and the whole mark is carried by the pill. The current link takes `--color-inverse-bg`
+and `--color-inverse-text`, **and** `aria-current="page"`, so the mark does not
 rest on colour alone. Hidden below 761 px. Carries
 `aria-label="Main navigation"`.
 

@@ -10,6 +10,11 @@ export interface MainNavigationItem {
  * inverted pill *and* by `aria-current`, so the mark does not rest on colour
  * alone.
  *
+ * Every link is semibold and at the same size, the current one included: a weight
+ * or size change would make the word itself grow and move its neighbours each
+ * time the destination changes, so the pill carries the whole mark and the row
+ * never reflows.
+ *
  * It is hidden below 761 px, where the header keeps only the logotype and the
  * mode switch.
  */
@@ -38,7 +43,7 @@ export function MainNavigation({
           <a
             key={item.href}
             className={cn(
-              'main-navigation__link inline-flex min-h-10 items-center rounded-pill px-4 text-caption-short no-underline',
+              'main-navigation__link inline-flex min-h-10 items-center rounded-pill px-4 text-caption-short font-semibold no-underline',
               isCurrent && 'main-navigation__link--current bg-inverse-bg text-inverse-text',
             )}
             href={item.href}

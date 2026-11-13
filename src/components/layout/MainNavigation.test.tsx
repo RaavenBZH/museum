@@ -15,6 +15,16 @@ describe('MainNavigation', () => {
     expect(screen.getByRole('navigation', { name: 'Main navigation' })).toBeInTheDocument();
   });
 
+  it('gives every link the same weight and size, so nothing moves on a change', () => {
+    const { container } = render(<MainNavigation items={items} currentHref="/play" />);
+    const links = [...container.querySelectorAll('.main-navigation__link')];
+
+    expect(links).toHaveLength(items.length);
+    links.forEach((link) => {
+      expect(link).toHaveClass('font-semibold', 'text-caption-short');
+    });
+  });
+
   it('marks the current destination with more than a colour', () => {
     render(<MainNavigation items={items} currentHref="/play" />);
 
