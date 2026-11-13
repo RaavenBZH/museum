@@ -116,17 +116,23 @@ breakpoint, above 760 px.
 
 Inline SVG at the stroke, `viewBox="0 0 24 24"`, `fill="none"`,
 `stroke="currentColor"`, `stroke-width="2"`, round caps and joins,
-`aria-hidden="true"` whenever a label is present. The system has exactly two:
+`aria-hidden="true"` whenever a label is present. The system has exactly four:
 
 | Icon           | Path                          | Use                              |
 | -------------- | ----------------------------- | -------------------------------- |
 | Right arrow    | `M5 12h14` + `M13 6l6 6-6 6`  | buttons, 18 px                   |
 | Diagonal arrow | `M7 17L17 7` + `M8 7h9v9`     | action tile, 18 px inside 40 px  |
+| Sun            | `r="4"` circle + eight rays   | mode switch, 18 px inside 44 px  |
+| Crescent       | `M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z` | mode switch, 18 px inside 44 px |
 
 No other icon library, no filled icon, no emoji. They are coded as
-[`ArrowRightIcon`](../src/components/icons/ArrowRightIcon.tsx) and
-[`ArrowUpRightIcon`](../src/components/icons/ArrowUpRightIcon.tsx), both
-decorative: the control they sit in always carries its own label.
+[`ArrowRightIcon`](../src/components/icons/ArrowRightIcon.tsx),
+[`ArrowUpRightIcon`](../src/components/icons/ArrowUpRightIcon.tsx),
+[`SunIcon`](../src/components/icons/SunIcon.tsx) and
+[`MoonIcon`](../src/components/icons/MoonIcon.tsx), all four decorative: the
+control they sit in always carries its own label. The two arrows slide 2 px the
+way they point on hover, under a `motion-safe` guard; the sun and the crescent
+never move, since the pill behind them is what tells the state.
 
 ## Logotype
 
@@ -156,7 +162,7 @@ Built, with their tests beside them:
 | `Button`, `ButtonLink`     | [`src/components/ui/Button.tsx`](../src/components/ui/Button.tsx)                           |
 | `Badge`                    | [`src/components/ui/Badge.tsx`](../src/components/ui/Badge.tsx)                             |
 | `DatePill`                 | [`src/components/ui/DatePill.tsx`](../src/components/ui/DatePill.tsx)                       |
-| `ThemeToggleButton`        | [`src/components/theme/ThemeToggleButton.tsx`](../src/components/theme/ThemeToggleButton.tsx) |
+| `ThemeModeSwitch`          | [`src/components/theme/ThemeModeSwitch.tsx`](../src/components/theme/ThemeModeSwitch.tsx)   |
 | `AppHeader`, `AppFooter`   | [`src/components/layout/`](../src/components/layout/)                                       |
 | `MainNavigation`           | [`src/components/layout/MainNavigation.tsx`](../src/components/layout/MainNavigation.tsx)   |
 | `BentoGrid`                | [`src/components/layout/BentoGrid.tsx`](../src/components/layout/BentoGrid.tsx)             |
@@ -315,13 +321,28 @@ right. The side columns stay equal whatever they hold, so the navigation sits
 on the axis of the page and not on the centre of the space left over between
 two slots of very different widths, which put it about 60 px off.
 
-The right-hand action is **Settings**, a `text` button labelled with the word:
-it is a way out of the page, not a step forward in it, so it carries no
-surface. The mockup had a sign-in button there; the application has no account
-and no server, so there is nothing to sign in to, and the slot carries the one
-thing a reader can actually change — their preferences, the display mode among
-them. That is also where the mode switch belongs once the screen exists; until
-then it is shown in the component gallery rather than in the bar.
+The right-hand slot holds the **mode switch** and nothing else, as in the
+mockup. An earlier mockup had a sign-in button there; the application has no
+account and no server, so there is nothing to sign in to, and the slot carries
+instead the one thing a reader can actually change about the page.
+
+### Mode switch
+
+`ThemeModeSwitch` is the day / night switch of the mockup: a `rounded-pill`
+group on `--color-surface` with 4 px padding, holding two 44 x 44 px buttons
+4 px apart — the sun for Sand, the crescent for Cocoa. The mode on screen wears
+an inverted pill (`--color-inverse-bg` on `--color-inverse-text`); the other
+button is bare and gains `--color-surface-muted` on hover.
+
+Two buttons rather than one toggle: each side names a destination that can be
+aimed at directly, so pressing the sun always gives Sand whatever the mode was.
+The current side also carries `aria-pressed`, so the state does not rest on
+colour alone, and the group is named `Display mode`. Pressing a side pins the
+mode — it is how a reader leaves the operating system preference behind — which
+is why the implicit `system` mode has no side of its own.
+
+It stays in the bar at every width, unlike the navigation: the mode is worth
+one tap everywhere, while the destinations have the screen below them.
 
 ### Texture on the inverted surfaces
 
