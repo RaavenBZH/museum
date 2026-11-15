@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { ArtworkCard, type ArtworkCardFormat, type ArtworkCardProps } from './ArtworkCard';
 
@@ -15,7 +16,7 @@ const everyFormat: readonly ArtworkCardFormat[] = ['wide', 'panoramic', 'portrai
 
 describe('ArtworkCard', () => {
   it('opens the artwork, and names the link without repeating the picture', () => {
-    render(<ArtworkCard {...greatWave} />);
+    render(<ArtworkCard {...greatWave} />, { wrapper: MemoryRouter });
 
     const link = screen.getByRole('link', {
       name: 'Under the Wave off Kanagawa, Katsushika Hokusai, ca. 1830-32',
@@ -25,7 +26,7 @@ describe('ArtworkCard', () => {
   });
 
   it('describes the picture as artist, title and year', () => {
-    render(<ArtworkCard {...greatWave} />);
+    render(<ArtworkCard {...greatWave} />, { wrapper: MemoryRouter });
 
     expect(
       screen.getByRole('img', {
@@ -35,7 +36,7 @@ describe('ArtworkCard', () => {
   });
 
   it.each(everyFormat)('shows title, artist and year on a %s tile', (format) => {
-    render(<ArtworkCard {...greatWave} format={format} />);
+    render(<ArtworkCard {...greatWave} format={format} />, { wrapper: MemoryRouter });
 
     expect(screen.getByText('Under the Wave off Kanagawa')).toBeInTheDocument();
     expect(screen.getByText('Katsushika Hokusai')).toBeInTheDocument();
@@ -44,7 +45,9 @@ describe('ArtworkCard', () => {
 
   it('gives the caption the same shape whatever the tile', () => {
     const shapes = everyFormat.map((format) => {
-      const { container, unmount } = render(<ArtworkCard {...greatWave} format={format} />);
+      const { container, unmount } = render(<ArtworkCard {...greatWave} format={format} />, {
+        wrapper: MemoryRouter,
+      });
       const caption = container.querySelector('.artwork-card__caption')?.className;
       unmount();
       return caption;
@@ -54,7 +57,9 @@ describe('ArtworkCard', () => {
   });
 
   it('keeps the artist in the markup on a small tile, and lets the box cut it', () => {
-    const { container, rerender } = render(<ArtworkCard {...greatWave} format="small" />);
+    const { container, rerender } = render(<ArtworkCard {...greatWave} format="small" />, {
+      wrapper: MemoryRouter,
+    });
 
     // Two title lines plus the gap: a one-line title leaves room for the
     // artist, a two-line title pushes it out. Only the small tile is clipped.
@@ -71,7 +76,9 @@ describe('ArtworkCard', () => {
   });
 
   it('draws the year the same way on every format', () => {
-    const { container, rerender } = render(<ArtworkCard {...greatWave} format="wide" />);
+    const { container, rerender } = render(<ArtworkCard {...greatWave} format="wide" />, {
+      wrapper: MemoryRouter,
+    });
     const shapes = everyFormat.map((format) => {
       rerender(<ArtworkCard {...greatWave} format={format} />);
       return container.querySelector('.date-pill')?.className;
@@ -81,7 +88,7 @@ describe('ArtworkCard', () => {
   });
 
   it('says so in words when the artwork has no picture', () => {
-    render(<ArtworkCard {...greatWave} imageUrl={null} />);
+    render(<ArtworkCard {...greatWave} imageUrl={null} />, { wrapper: MemoryRouter });
 
     expect(screen.getByText('No image available')).toBeInTheDocument();
     expect(screen.queryByRole('img')).not.toBeInTheDocument();

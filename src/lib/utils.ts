@@ -13,6 +13,10 @@ import { createCn } from 'cn/config';
 const TYPE_SCALE_NAMES = [
   'display',
   'hero',
+  'artwork-title-xl',
+  'artwork-title-l',
+  'artwork-title-m',
+  'artwork-title-s',
   'tile-title',
   'logo',
   'lead',

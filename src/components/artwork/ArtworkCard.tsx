@@ -1,3 +1,4 @@
+import { Link } from 'react-router';
 import { ArtworkImage } from '@/components/artwork/ArtworkImage';
 import {
   bentoTileClassName,
@@ -66,13 +67,13 @@ export function ArtworkCard({
   className,
 }: ArtworkCardProps) {
   return (
-    <a
+    <Link
       className={cn(
         'artwork-card group flex flex-col gap-2 rounded-card bg-surface p-2.5 no-underline',
         bentoTileClassName(format),
         className,
       )}
-      href={href}
+      to={href}
       aria-label={`${title}, ${artist}, ${year}`}
     >
       <ArtworkImage src={imageUrl} alt={`${artist}, ${title}, ${year}`} />
@@ -95,6 +96,6 @@ export function ArtworkCard({
           </span>
         </span>
       </span>
-    </a>
+    </Link>
   );
 }

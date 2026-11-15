@@ -1,17 +1,26 @@
 import { render, screen, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { HomePage } from './HomePage';
 import { HOME_FEATURED_ARTWORKS } from './homeFeaturedArtworks';
 
 describe('HomePage', () => {
   it('opens on the headline, as the only first-level heading of the page', () => {
-    render(<HomePage />);
+    render(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>,
+    );
 
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Discover art.');
   });
 
   it('shows every featured artwork, each one linking to its own detail view', () => {
-    render(<HomePage />);
+    render(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>,
+    );
 
     for (const artwork of HOME_FEATURED_ARTWORKS) {
       const link = screen.getByRole('link', {
@@ -29,7 +38,11 @@ describe('HomePage', () => {
   });
 
   it('offers the modes instead of repeating the screen it is showing', () => {
-    render(<HomePage />);
+    render(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>,
+    );
 
     expect(screen.getByRole('link', { name: 'Discover' })).toHaveAttribute('href', '/discover');
     expect(screen.getByRole('link', { name: 'Start discovering' })).toHaveAttribute(
@@ -40,7 +53,11 @@ describe('HomePage', () => {
   });
 
   it('shows no counter on the gallery tile, because nothing has counted it yet', () => {
-    const { container } = render(<HomePage />);
+    const { container } = render(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>,
+    );
     const tile = container.querySelector('.action-tile');
 
     expect(within(tile as HTMLElement).getByText('My Gallery')).toBeInTheDocument();

@@ -4,7 +4,7 @@ import { ClosingBanner } from '@/components/landing/ClosingBanner';
 import { HeadlineBlock } from '@/components/landing/HeadlineBlock';
 import { BentoGrid } from '@/components/layout/BentoGrid';
 import { Badge } from '@/components/ui/Badge';
-import { ButtonLink } from '@/components/ui/Button';
+import { ButtonRouterLink } from '@/components/ui/Button';
 import { HOME_FEATURED_ARTWORKS } from './homeFeaturedArtworks';
 import { CLOSING_BANNER_TEXTURE, GALLERY_TILE_TEXTURE } from './homeTextures';
 
@@ -32,12 +32,12 @@ export function HomePage() {
           badge={<Badge highlight="In progress">My Gallery</Badge>}
           actions={
             <>
-              <ButtonLink variant="primary" href="/discover">
+              <ButtonRouterLink variant="primary" to="/discover">
                 Discover
-              </ButtonLink>
-              <ButtonLink variant="secondary" href="/gallery">
+              </ButtonRouterLink>
+              <ButtonRouterLink variant="secondary" to="/gallery">
                 My Gallery
-              </ButtonLink>
+              </ButtonRouterLink>
             </>
           }
         />
@@ -54,9 +54,9 @@ export function HomePage() {
         secondLine="One artwork at a time."
         textureImageUrl={CLOSING_BANNER_TEXTURE}
         action={
-          <ButtonLink variant="inverse" href="/discover">
+          <ButtonRouterLink variant="inverse" to="/discover">
             Start discovering
-          </ButtonLink>
+          </ButtonRouterLink>
         }
       />
     </div>

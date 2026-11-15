@@ -1,5 +1,6 @@
 import { ArrowUpRightIcon } from '@/components/icons/ArrowUpRightIcon';
 import { bentoTileClassName } from '@/components/layout/bentoTileFormats';
+import { Link } from 'react-router';
 import { cn } from '@/lib/utils';
 
 /**
@@ -36,13 +37,13 @@ export function ActionTile({
   className?: string;
 }) {
   return (
-    <a
+    <Link
       className={cn(
         'action-tile group relative flex flex-col justify-between overflow-hidden rounded-card bg-inverse-bg p-5.5 text-inverse-text no-underline',
         bentoTileClassName('action'),
         className,
       )}
-      href={href}
+      to={href}
     >
       {textureImageUrl === undefined ? null : (
         <>
@@ -75,6 +76,6 @@ export function ActionTile({
         </span>
       </span>
       <span className="action-tile__label relative text-tile-title">{label}</span>
-    </a>
+    </Link>
   );
 }

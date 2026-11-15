@@ -1,3 +1,4 @@
+import { NavLink } from 'react-router';
 import { cn } from '@/lib/utils';
 
 export interface MainNavigationItem {
@@ -10,6 +11,12 @@ export interface MainNavigationItem {
  * inverted pill *and* by `aria-current`, so the mark does not rest on colour
  * alone.
  *
+ * Both marks come from the router: `NavLink` compares its own address to the
+ * one being shown, so the mark and the screen can never disagree, and no
+ * screen has to be told which of its links is the current one. `end` is what
+ * makes the home item behave — without it every address counts as being
+ * "under" `/`, and Home would be marked on every screen.
+ *
  * Every link is semibold and at the same size, the current one included: a weight
  * or size change would make the word itself grow and move its neighbours each
  * time the destination changes, so the pill carries the whole mark and the row
@@ -17,15 +24,17 @@ export interface MainNavigationItem {
  *
  * It is hidden below 761 px, where the header keeps only the logotype and the
  * mode switch.
+ *
+ * Its items are router links rather than plain anchors: they are the way back
+ * to a screen that holds state — the discovery run — and a full page load
+ * would throw that state away. They still render as real anchors with a real
+ * `href`, so middle click and "open in a new tab" keep working.
  */
 export function MainNavigation({
   items,
-  currentHref,
   className,
 }: {
   items: readonly MainNavigationItem[];
-  /** The `href` of the destination being shown, if it is one of the items. */
-  currentHref?: string;
   className?: string;
 }) {
   return (
@@ -36,23 +45,21 @@ export function MainNavigation({
       )}
       aria-label="Main navigation"
     >
-      {items.map((item) => {
-        const isCurrent = item.href === currentHref;
-
-        return (
-          <a
-            key={item.href}
-            className={cn(
+      {items.map((item) => (
+        <NavLink
+          key={item.href}
+          className={({ isActive }) =>
+            cn(
               'main-navigation__link inline-flex min-h-10 items-center rounded-pill px-4 text-caption-short font-semibold no-underline',
-              isCurrent && 'main-navigation__link--current bg-inverse-bg text-inverse-text',
-            )}
-            href={item.href}
-            aria-current={isCurrent ? 'page' : undefined}
-          >
-            {item.label}
-          </a>
-        );
-      })}
+              isActive && 'main-navigation__link--current bg-inverse-bg text-inverse-text',
+            )
+          }
+          to={item.href}
+          end
+        >
+          {item.label}
+        </NavLink>
+      ))}
     </nav>
   );
 }

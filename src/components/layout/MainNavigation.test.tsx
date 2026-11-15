@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { MainNavigation, type MainNavigationItem } from './MainNavigation';
 
@@ -8,15 +9,27 @@ const items: readonly MainNavigationItem[] = [
   { label: 'My Gallery', href: '/gallery' },
 ];
 
+/**
+ * Its links read the current destination from the router, so a test opens an
+ * address rather than naming the current item.
+ */
+function renderNavigation(address = '/') {
+  return render(
+    <MemoryRouter initialEntries={[address]}>
+      <MainNavigation items={items} />
+    </MemoryRouter>,
+  );
+}
+
 describe('MainNavigation', () => {
   it('is reachable by its accessible name', () => {
-    render(<MainNavigation items={items} />);
+    renderNavigation();
 
     expect(screen.getByRole('navigation', { name: 'Main navigation' })).toBeInTheDocument();
   });
 
   it('gives every link the same weight and size, so nothing moves on a change', () => {
-    const { container } = render(<MainNavigation items={items} currentHref="/gallery" />);
+    const { container } = renderNavigation('/gallery');
     const links = [...container.querySelectorAll('.main-navigation__link')];
 
     expect(links).toHaveLength(items.length);
@@ -26,7 +39,7 @@ describe('MainNavigation', () => {
   });
 
   it('marks the current destination with more than a colour', () => {
-    render(<MainNavigation items={items} currentHref="/gallery" />);
+    renderNavigation('/gallery');
 
     expect(screen.getByRole('link', { name: 'My Gallery' })).toHaveAttribute(
       'aria-current',

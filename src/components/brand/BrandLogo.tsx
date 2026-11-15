@@ -1,3 +1,4 @@
+import { Link } from 'react-router';
 import { cn } from '@/lib/utils';
 
 /**
@@ -65,13 +66,15 @@ export function BrandLogo() {
  * `aria-current`: two marked links for one destination would say the same
  * thing twice to a screen reader.
  *
- * It is a real anchor, like `ButtonLink`, so it keeps its keyboard behaviour,
- * its context menu and its middle click.
+ * It is a router link, like the items of the bar beside it, so that walking
+ * away from a screen holding state does not reload the application. It still
+ * renders a real anchor with a real `href`, so it keeps its keyboard
+ * behaviour, its context menu and its middle click.
  */
 export function BrandLogoLink({ className }: { className?: string }) {
   return (
-    <a className={cn('brand-logo-link inline-flex no-underline', className)} href="/">
+    <Link className={cn('brand-logo-link inline-flex no-underline', className)} to="/">
       <BrandLogo />
-    </a>
+    </Link>
   );
 }

@@ -10,6 +10,9 @@ import { ThemeModeSwitch } from '@/components/theme/ThemeModeSwitch';
  * logotype is a link home, so the way back is where a visitor looks for it
  * first.
  *
+ * It is told nothing about which screen is being shown: the bar reads that
+ * from the router itself — see `MainNavigation`.
+ *
  * The right-hand slot holds the day / night switch alone, where the mockup
  * puts it. It stays in the bar on a phone, where the navigation does not: the
  * mode is worth one tap everywhere, while the destinations have the screen
@@ -26,18 +29,11 @@ import { ThemeModeSwitch } from '@/components/theme/ThemeModeSwitch';
  * a grid item at all, and without `col-start-3` the action would slide into
  * the middle column on a phone.
  */
-export function AppHeader({
-  navigation,
-  currentHref,
-}: {
-  navigation: readonly MainNavigationItem[];
-  /** The `href` of the screen being shown, if it is one of the items. */
-  currentHref?: string;
-}) {
+export function AppHeader({ navigation }: { navigation: readonly MainNavigationItem[] }) {
   return (
     <header className="app-header grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4 py-6">
       <BrandLogoLink />
-      <MainNavigation className="col-start-2" items={navigation} currentHref={currentHref} />
+      <MainNavigation className="col-start-2" items={navigation} />
       <ThemeModeSwitch className="app-header__action col-start-3 justify-self-end" />
     </header>
   );

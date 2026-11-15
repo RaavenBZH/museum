@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { ThemeProvider } from '@/components/theme/ThemeProvider';
 import { AppHeader } from './AppHeader';
@@ -8,11 +9,16 @@ const navigation = [
   { label: 'My Gallery', href: '/gallery' },
 ];
 
-/** The bar reads the display mode, so it is only ever shown inside a provider. */
-function renderHeader(currentHref?: string) {
+/**
+ * The bar reads the display mode and the address being shown, so it is only
+ * ever rendered inside both providers, at a given address.
+ */
+function renderHeader(address = '/') {
   return render(
     <ThemeProvider>
-      <AppHeader navigation={navigation} currentHref={currentHref} />
+      <MemoryRouter initialEntries={[address]}>
+        <AppHeader navigation={navigation} />
+      </MemoryRouter>
     </ThemeProvider>,
   );
 }

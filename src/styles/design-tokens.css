@@ -54,6 +54,33 @@
   --text-hero--letter-spacing: -0.045em;
   --text-hero--font-weight: 600;
 
+  /* Artwork title. The museum's titles run from two words to a paragraph, and
+   * they are set in a column of fixed width, so one size cannot hold them:
+   * measured on 24 random European Paintings, 10 titles fitted in 24
+   * characters, 8 more stopped at 40, 4 at 80, and one reached 167. The four
+   * steps below cut that spread at 24, 48 and 90 characters — breakpoints on
+   * the length, not on the viewport, since the column does not change width
+   * above the system's single breakpoint but the title does. */
+  --text-artwork-title-xl: 2.25rem; /* 36px, up to 24 characters */
+  --text-artwork-title-xl--line-height: 1;
+  --text-artwork-title-xl--letter-spacing: -0.04em;
+  --text-artwork-title-xl--font-weight: 600;
+
+  --text-artwork-title-l: 1.875rem; /* 30px, up to 48 characters */
+  --text-artwork-title-l--line-height: 1.05;
+  --text-artwork-title-l--letter-spacing: -0.035em;
+  --text-artwork-title-l--font-weight: 600;
+
+  --text-artwork-title-m: 1.5rem; /* 24px, up to 90 characters */
+  --text-artwork-title-m--line-height: 1.15;
+  --text-artwork-title-m--letter-spacing: -0.025em;
+  --text-artwork-title-m--font-weight: 600;
+
+  --text-artwork-title-s: 1.25rem; /* 20px, beyond 90 characters */
+  --text-artwork-title-s--line-height: 1.25;
+  --text-artwork-title-s--letter-spacing: -0.015em;
+  --text-artwork-title-s--font-weight: 600;
+
   --text-tile-title: 1.875rem; /* 30px */
   --text-tile-title--line-height: 1;
   --text-tile-title--letter-spacing: -0.04em;
@@ -103,12 +130,19 @@
   --breakpoint-desktop: 761px;
 }
 
-/* Desktop overrides of the type scale. Only the two largest styles change
- * size between mobile and desktop. */
+/* Desktop overrides of the type scale. The two largest styles change size
+ * between mobile and desktop, and so does every step of the artwork title:
+ * on a phone the cartel is the width of the screen, on a desktop it is five
+ * columns of twelve, which is narrower than the screen but wider than a
+ * phone. */
 @media (width >= 761px) {
   :root {
     --text-display: 4.5rem; /* 72px */
     --text-hero: 4.25rem; /* 68px */
+    --text-artwork-title-xl: 2.75rem; /* 44px */
+    --text-artwork-title-l: 2.25rem; /* 36px */
+    --text-artwork-title-m: 1.75rem; /* 28px */
+    --text-artwork-title-s: 1.375rem; /* 22px */
   }
 }
 

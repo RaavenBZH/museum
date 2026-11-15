@@ -9,6 +9,12 @@ import { cn } from '@/lib/utils';
  * picture, so a missing image is a normal state, not an error: `src` is
  * nullable and the fallback says so in words.
  *
+ * `priority` says the picture is the point of the screen rather than one tile
+ * of a grid: it is then loaded eagerly and asked for first. Left alone, the
+ * picture waits until it is near the viewport, which is what a card in a long
+ * grid should do and exactly what the artwork on show must not do — the one
+ * thing a visitor is waiting for cannot be the last thing requested.
+ *
  * The picture grows by 5 % when the card around it is hovered. The frame keeps
  * `overflow: hidden`, so the artwork is cropped a little further rather than
  * spilling, and the card does not move a pixel: nothing below it reflows. The
@@ -18,10 +24,13 @@ import { cn } from '@/lib/utils';
 export function ArtworkImage({
   src,
   alt,
+  priority = false,
   className,
 }: {
   src: string | null;
   alt: string;
+  /** True for the one picture a screen is built around. */
+  priority?: boolean;
   className?: string;
 }) {
   return (
@@ -40,7 +49,8 @@ export function ArtworkImage({
           className="artwork-image__picture absolute inset-0 size-full object-cover transition-transform duration-500 motion-safe:group-hover:scale-105"
           src={src}
           alt={alt}
-          loading="lazy"
+          loading={priority ? 'eager' : 'lazy'}
+          fetchPriority={priority ? 'high' : undefined}
         />
       )}
     </div>
