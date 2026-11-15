@@ -9,6 +9,20 @@
       content="Explore the Metropolitan Museum of Art collection: browse artworks, read their details and see how a department's holdings are distributed."
     />
     <title>Met Museum Explorer</title>
+    <script>
+      // Pin the saved mode on <html> before the first paint, otherwise the
+      // stylesheet follows the system preference until React mounts and the
+      // wrong mode flashes. Key and values mirror src/components/theme/themeModes.ts.
+      try {
+        const mode = localStorage.getItem('museum:theme-mode');
+
+        if (mode === 'sand' || mode === 'cocoa') {
+          document.documentElement.setAttribute('data-theme', mode);
+        }
+      } catch {
+        // Storage can be blocked; the system preference then applies.
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

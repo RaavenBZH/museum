@@ -60,6 +60,12 @@ another.
 its absence follows the operating system. `ThemeProvider` owns the attribute and
 remembers the visitor's choice; `dark:` utilities resolve the same way.
 
+The attribute only exists once React has mounted, so a visitor whose saved mode
+contradicts the system preference would see the other mode painted first. A
+blocking script in `index.html` therefore sets the attribute from the saved
+value before the first paint; it is the one place that repeats the storage key
+and the mode names, because it runs before any module is loaded.
+
 ## Typography
 
 `Inter Tight` for everything, `JetBrains Mono` for figures alone — artwork
