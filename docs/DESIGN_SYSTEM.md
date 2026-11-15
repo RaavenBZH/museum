@@ -94,6 +94,33 @@ character. A large heading without it is a mistake.
 Headlines run over two lines, the first in `--color-text` and the second in
 `--color-text-subtle`, and end with a full stop.
 
+### Artwork title
+
+The title of an artwork is the one style whose size is chosen from the content
+rather than from the element. The museum's titles run from two words ("In the
+Sun") to a paragraph naming the sitter, their rank and their dates, and they
+are set in a column of fixed width: one size would either dwarf the short ones
+or let the long ones take the whole cartel.
+
+So it has a scale of its own, in four steps, picked by title length. The
+breakpoints are **lengths in characters**, not viewport widths. Measured on 24
+artworks drawn at random from European Paintings, the titles were 10 to 24
+characters for 10 of them, up to 40 for 8 more, up to 80 for 4, and one
+reached 167; the steps below cut that spread at **24, 48 and 90**.
+
+| Utility                  | Title length    | Desktop | Mobile | Line height | Tracking   |
+| ------------------------ | --------------- | ------- | ------ | ----------- | ---------- |
+| `text-artwork-title-xl`  | up to 24 chars  | 44 px   | 36 px  | 1           | -0.04 em   |
+| `text-artwork-title-l`   | 25 – 48         | 36 px   | 30 px  | 1.05        | -0.035 em  |
+| `text-artwork-title-m`   | 49 – 90         | 28 px   | 24 px  | 1.15        | -0.025 em  |
+| `text-artwork-title-s`   | beyond 90       | 22 px   | 20 px  | 1.25        | -0.015 em  |
+
+All four are weight 600. The line height grows and the tracking loosens as the
+size drops: a long title is read as text, a short one as a headline. The step
+is decided by `artworkTitleScale` in the domain layer, so the decision is one
+pure function with its own tests, and the component only maps a step to a
+utility.
+
 The names of this scale are declared to the class merger in
 [`src/lib/utils.ts`](../src/lib/utils.ts). Without that list it reads
 `text-caption-short` as a colour and drops it as soon as the same element also
@@ -127,7 +154,7 @@ breakpoint, above 760 px.
 
 Inline SVG at the stroke, `viewBox="0 0 24 24"`, `fill="none"`,
 `stroke="currentColor"`, `stroke-width="2"`, round caps and joins,
-`aria-hidden="true"` whenever a label is present. The system has exactly four:
+`aria-hidden="true"` whenever a label is present. The system has exactly five:
 
 | Icon           | Path                          | Use                              |
 | -------------- | ----------------------------- | -------------------------------- |
@@ -135,15 +162,19 @@ Inline SVG at the stroke, `viewBox="0 0 24 24"`, `fill="none"`,
 | Diagonal arrow | `M7 17L17 7` + `M8 7h9v9`     | action tile, 18 px inside 40 px  |
 | Sun            | `r="4"` circle + eight rays   | mode switch, 18 px inside 44 px  |
 | Crescent       | `M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z` | mode switch, 18 px inside 44 px |
+| Chevron        | `M6 9l6 6 6-6` down, `M18 15l-6-6-6 6` up | disclosure button, 18 px         |
 
 No other icon library, no filled icon, no emoji. They are coded as
 [`ArrowRightIcon`](../src/components/icons/ArrowRightIcon.tsx),
 [`ArrowUpRightIcon`](../src/components/icons/ArrowUpRightIcon.tsx),
-[`SunIcon`](../src/components/icons/SunIcon.tsx) and
-[`MoonIcon`](../src/components/icons/MoonIcon.tsx), all four decorative: the
-control they sit in always carries its own label. The two arrows slide 2 px the
-way they point on hover, under a `motion-safe` guard; the sun and the crescent
-never move, since the pill behind them is what tells the state.
+[`SunIcon`](../src/components/icons/SunIcon.tsx),
+[`MoonIcon`](../src/components/icons/MoonIcon.tsx) and
+[`ChevronIcon`](../src/components/icons/ChevronIcon.tsx), all five decorative:
+the control they sit in always carries its own label. The two arrows slide 2 px
+the way they point on hover, under a `motion-safe` guard; the sun, the crescent
+and the chevron never move — what is behind or beside them is what tells the
+state. The chevron points down on what is folded and up on what is open, so it
+states the state rather than the action, and `aria-expanded` says it again.
 
 ## Logotype
 
@@ -170,7 +201,7 @@ Built, with their tests beside them:
 | Component                  | File                                                                                       |
 | -------------------------- | ------------------------------------------------------------------------------------------ |
 | `BrandLogo`                | [`src/components/brand/BrandLogo.tsx`](../src/components/brand/BrandLogo.tsx)               |
-| `Button`, `ButtonLink`     | [`src/components/ui/Button.tsx`](../src/components/ui/Button.tsx)                           |
+| `Button`, `ButtonLink`, `ButtonRouterLink` | [`src/components/ui/Button.tsx`](../src/components/ui/Button.tsx)           |
 | `Badge`                    | [`src/components/ui/Badge.tsx`](../src/components/ui/Badge.tsx)                             |
 | `DatePill`                 | [`src/components/ui/DatePill.tsx`](../src/components/ui/DatePill.tsx)                       |
 | `ThemeModeSwitch`          | [`src/components/theme/ThemeModeSwitch.tsx`](../src/components/theme/ThemeModeSwitch.tsx)   |
@@ -179,17 +210,24 @@ Built, with their tests beside them:
 | `BentoGrid`                | [`src/components/layout/BentoGrid.tsx`](../src/components/layout/BentoGrid.tsx)             |
 | `ArtworkCard`, `ArtworkImage` | [`src/components/artwork/`](../src/components/artwork/)                                  |
 | `HeadlineBlock`, `ActionTile`, `ClosingBanner` | [`src/components/landing/`](../src/components/landing/)                 |
+| `ArtworkStage`, `ArtworkCartel`, `ArtworkFactSection`, `NextArtworkBar` | [`src/components/discover/`](../src/components/discover/) |
+| `NoticePanel`, `ErrorBoundary` | [`src/components/layout/`](../src/components/layout/)                                   |
 
 They are presentation components: they take props and nothing else, so they
 hold no state and know nothing of the collection API. The screens that compose
 them arrive with the features that need them.
 
-The bar carries the three modes, in this order: **Discover**, **My Gallery**,
-**Play**. Discover is the home itself — the page where artworks are read one
-after another, at the reader's own pace — so the home has a current item, and
-the logotype and the first link lead to the same place. Play is the timed
-counterpart; it was called Timeline while it was only a mechanic, which named
-how it works rather than what it offers.
+The bar carries three destinations, in this order: **Home**, **Discover**,
+**My Gallery**. The home is a screen of its own and not one of the modes — it
+presents them — so it has its own item, and the logotype leads to the same
+place without carrying the current mark. Discover is the screen where artworks
+are read one after another, at the reader's own pace. My Gallery is where what
+has been discovered is kept and counted.
+
+A timed mode was drawn and dropped: it is not being built, and nothing in this
+system refers to it any more. My Gallery is in the bar because the home already
+offers it, and its screen does not exist yet: until it does, that address is
+served by the "not found" screen, which says so rather than failing silently.
 
 The first of those screens is the home page,
 [`src/pages/HomePage.tsx`](../src/pages/HomePage.tsx): the bar, the bento grid
@@ -197,7 +235,9 @@ and the closing band. Its seven artworks are a fixed editorial selection
 ([`homeFeaturedArtworks.ts`](../src/pages/homeFeaturedArtworks.ts)), not an API
 result — the door of the product opens on the same composed grid every time,
 and the collection is drawn at random in Discovery mode instead. Each tile
-links to `/artworks/<objectID>`, the detail view of a real object.
+links to `/artworks/<objectID>`, the detail view of a real object — a screen
+that is not built yet either, so those tiles reach the "not found" screen for
+now.
 
 ### Buttons
 
@@ -221,7 +261,24 @@ The `variant` prop is required on both `Button` and `ButtonLink`: a button
 whose weight is implicit is a button nobody checked. The inverse variant takes
 its container's text colour as its background and its background as its text,
 and is used inside an inverted block only. A screen area carries at most one
-primary button, labelled **Discover**.
+primary button, labelled with the leading verb of that area — **Discover** on
+the screens that offer an artwork, **Try again** or **Reload the application**
+on a screen that is recovering from a failure.
+
+A button held shut keeps its colours and loses some of its presence —
+`opacity: 0.55`, nothing else. The system has no second palette for a state,
+and a button that changed colour when it became unavailable would read as a
+different button. The opacity is never the only sign: whatever holds the button
+shut says so in words beside it, and the button points at that line with
+`aria-describedby`.
+
+Two ways of holding it, and the choice is not cosmetic. `disabled` takes the
+button out of the tab order, so the line explaining the wait becomes
+unreachable from the keyboard; `aria-disabled` leaves it focusable and
+announced as unavailable, with its handler detached so the click does nothing.
+A button whose unavailability is explained beside it takes the second form.
+The band under a discovered artwork is the case this was written for — it holds
+its action shut for three seconds, counts down, and uses `aria-disabled`.
 
 `Button` renders a `<button type="button">` and acts on the current page;
 `ButtonLink` renders an `<a>` and takes the visitor elsewhere, so it keeps the
@@ -413,6 +470,42 @@ destination changes and the whole mark is carried by the pill. The current link 
 and `--color-inverse-text`, **and** `aria-current="page"`, so the mark does not
 rest on colour alone. Hidden below 761 px. Carries
 `aria-label="Main navigation"`.
+
+### Discover screen
+
+[`src/pages/DiscoverPage.tsx`](../src/pages/DiscoverPage.tsx) is laid out on
+**twelve columns with 24 px gutters**, the only grid of the system besides the
+bento: the artwork takes seven columns, the cartel five, and both start at the
+top. The artwork column is **sticky 24 px from the top**, so the picture stays
+on screen while the record beside it is read; below 761 px the two become one
+column, the picture first.
+
+- **`ArtworkStage`**: a `--color-surface` card with 24 px of padding holding
+  one `rounded-image` frame, centred. The frame carries the **real proportions
+  of the object**, from its measured height and width, and is capped by a
+  **620 px height budget** — the one raw length of this screen, beside the
+  bento's two row heights. An object the museum has not measured keeps a 4:3
+  frame rather than a size nobody knows. The panel takes the height of its
+  frame: no fixed height, so a tall portrait cannot overflow it.
+- **`ArtworkCartel`**: one `--color-surface` card, 40 px of padding, 32 px
+  between its parts. The title takes the artwork-title scale; the author line
+  is `text-lead`, the date in `--color-text-muted` beside it. Then the blocks,
+  then one secondary button that folds the rest of the record away, then that
+  record and, at its foot, the way out to metmuseum.org. The folded record
+  stays in the page under `hidden`, so `aria-expanded` and `aria-controls`
+  describe an element that exists.
+- **`ArtworkFactSection`**: a block heading at `text-caption-title`, preceded
+  by an 8 px accent dot — the one ornament of the system, and it carries no
+  meaning of its own: the heading beside it is worded and the dot is
+  `aria-hidden`. Under it, a description list whose **label column is 112 px**,
+  a layout length like the bento rows, with 16 px to the value and 8 px above
+  and below each row.
+- **Figures in the cartel are set in the sans face**, not in the monospace
+  family that the rest of the system reserves for them. A dimension or a year
+  sits here inside a prose list, beside a medium and a credit line; switched to
+  `text-mono` it would also drop from 15 px to 12 px and the rows would stop
+  lining up. The monospace family keeps the figures that stand alone — the
+  proportions under a frame, a counter.
 
 ### Other components
 
