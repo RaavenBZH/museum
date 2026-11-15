@@ -5,7 +5,7 @@ import { AppHeader } from './AppHeader';
 
 const navigation = [
   { label: 'Discover', href: '/discover' },
-  { label: 'Play', href: '/play' },
+  { label: 'My Gallery', href: '/gallery' },
 ];
 
 /** The bar reads the display mode, so it is only ever shown inside a provider. */
@@ -46,9 +46,12 @@ describe('AppHeader', () => {
   });
 
   it('marks the current destination for assistive technology too', () => {
-    renderHeader('/play');
+    renderHeader('/gallery');
 
-    expect(screen.getByRole('link', { name: 'Play' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'My Gallery' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
     expect(screen.getByRole('link', { name: 'Discover' })).not.toHaveAttribute('aria-current');
   });
 });

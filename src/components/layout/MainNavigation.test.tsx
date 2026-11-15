@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { MainNavigation, type MainNavigationItem } from './MainNavigation';
 
 const items: readonly MainNavigationItem[] = [
+  { label: 'Home', href: '/' },
   { label: 'Discover', href: '/discover' },
-  { label: 'Play', href: '/play' },
   { label: 'My Gallery', href: '/gallery' },
 ];
 
@@ -16,7 +16,7 @@ describe('MainNavigation', () => {
   });
 
   it('gives every link the same weight and size, so nothing moves on a change', () => {
-    const { container } = render(<MainNavigation items={items} currentHref="/play" />);
+    const { container } = render(<MainNavigation items={items} currentHref="/gallery" />);
     const links = [...container.querySelectorAll('.main-navigation__link')];
 
     expect(links).toHaveLength(items.length);
@@ -26,9 +26,12 @@ describe('MainNavigation', () => {
   });
 
   it('marks the current destination with more than a colour', () => {
-    render(<MainNavigation items={items} currentHref="/play" />);
+    render(<MainNavigation items={items} currentHref="/gallery" />);
 
-    expect(screen.getByRole('link', { name: 'Play' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'My Gallery' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
     expect(screen.getByRole('link', { name: 'Discover' })).not.toHaveAttribute('aria-current');
   });
 });

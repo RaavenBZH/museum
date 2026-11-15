@@ -32,9 +32,9 @@ describe('HomePage', () => {
     render(<HomePage />);
 
     expect(screen.getByRole('link', { name: 'Discover' })).toHaveAttribute('href', '/discover');
-    expect(screen.getByRole('link', { name: 'Start playing' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Start discovering' })).toHaveAttribute(
       'href',
-      '/play',
+      '/discover',
     );
     expect(screen.queryByRole('link', { name: 'Home' })).not.toBeInTheDocument();
   });

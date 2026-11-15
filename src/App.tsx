@@ -4,19 +4,21 @@ import { AppHeader } from '@/components/layout/AppHeader';
 import { HomePage } from '@/pages/HomePage';
 
 /**
- * The destinations of the bar, in order: the home, then the three modes of the
+ * The destinations of the bar, in order: the home, then the two modes of the
  * product.
  *
  * The home is a screen of its own and not one of the modes: it presents them
  * and shows a first set of artworks, which is why the logotype and `Home` lead
  * to the same place while `Discover` has its own route. That screen is the one
  * the home's main action opens, so it does not exist yet.
+ *
+ * A timed mode was drawn and dropped: it is not being built, so it is in
+ * neither the bar nor the home.
  */
 const MAIN_NAVIGATION: readonly MainNavigationItem[] = [
   { label: 'Home', href: '/' },
   { label: 'Discover', href: '/discover' },
   { label: 'My Gallery', href: '/gallery' },
-  { label: 'Play', href: '/play' },
 ];
 
 /** The screen the shell is showing; it becomes the router's business later. */

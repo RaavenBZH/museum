@@ -30,7 +30,7 @@ describe('ClosingBanner texture', () => {
     const { container } = render(
       <ClosingBanner
         firstLine="A new way to learn."
-        secondLine="Make it a game."
+        secondLine="One artwork at a time."
         textureImageUrl="https://images.metmuseum.org/wheat-field.jpg"
         action={null}
       />,
@@ -44,7 +44,7 @@ describe('ClosingBanner texture', () => {
 
   it('leaves the surface plain when no artwork is given', () => {
     const { container } = render(
-      <ClosingBanner firstLine="A new way to learn." secondLine="Make it a game." action={null} />,
+      <ClosingBanner firstLine="A new way to learn." secondLine="One artwork at a time." action={null} />,
     );
 
     expect(container.querySelector('.closing-banner__texture')).toBeNull();

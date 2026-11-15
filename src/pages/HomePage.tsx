@@ -29,7 +29,7 @@ export function HomePage() {
           firstLine="Discover art."
           secondLine="The way you want."
           lead="Discover the Metropolitan Museum of Art collection one artwork at a time, and build a gallery of everything you have seen."
-          badge={<Badge highlight="In progress">Play mode</Badge>}
+          badge={<Badge highlight="In progress">My Gallery</Badge>}
           actions={
             <>
               <ButtonLink variant="primary" href="/discover">
@@ -51,11 +51,11 @@ export function HomePage() {
 
       <ClosingBanner
         firstLine="A new way to learn."
-        secondLine="Make it a game."
+        secondLine="One artwork at a time."
         textureImageUrl={CLOSING_BANNER_TEXTURE}
         action={
-          <ButtonLink variant="inverse" href="/play">
-            Start playing
+          <ButtonLink variant="inverse" href="/discover">
+            Start discovering
           </ButtonLink>
         }
       />

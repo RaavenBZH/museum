@@ -35,7 +35,7 @@ describe('HeadlineBlock', () => {
         firstLine="Learn the collection."
         secondLine="One artwork at a time."
         lead=""
-        badge={<Badge highlight="New">Play mode</Badge>}
+        badge={<Badge highlight="New">My Gallery</Badge>}
         actions={
           <ButtonLink variant="primary" href="/discover">
             Discover
@@ -44,7 +44,7 @@ describe('HeadlineBlock', () => {
       />,
     );
 
-    expect(screen.getByText('Play mode')).toBeInTheDocument();
+    expect(screen.getByText('My Gallery')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Discover' })).toBeInTheDocument();
   });
 });
