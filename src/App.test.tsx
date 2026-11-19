@@ -6,14 +6,22 @@ import { App } from './App';
 import { ThemeProvider } from '@/hooks/ThemeProvider';
 import { DiscoveryProvider } from '@/hooks/DiscoveryProvider';
 import { drawRandomArtwork } from '@/hooks/drawRandomArtwork';
+import { fetchDiscoveryArtwork } from '@/hooks/fetchDiscoveryArtwork';
+import { SEEN_ARTWORKS_STORAGE_KEY } from '@/hooks/seenArtworksStorage';
 import { buildArtwork } from '@/test/artworkFixture';
 
 // The museum is never called: the shell is being tested, not the transport.
 vi.mock('@/hooks/drawRandomArtwork', () => ({ drawRandomArtwork: vi.fn() }));
+vi.mock('@/hooks/fetchDiscoveryArtwork', () => ({ fetchDiscoveryArtwork: vi.fn() }));
+vi.mock('@/api/metMuseumObjects', () => ({
+  fetchObjectIds: vi.fn(async () => ({ total: 2650, objectIDs: [] })),
+}));
 
 const drawMock = vi.mocked(drawRandomArtwork);
+const openMock = vi.mocked(fetchDiscoveryArtwork);
 const starryNight = buildArtwork({ id: 1, title: 'The Starry Night' });
 const sunflowers = buildArtwork({ id: 2, title: 'Sunflowers' });
+const irises = buildArtwork({ id: 3, title: 'Irises', artistName: 'Vincent van Gogh' });
 
 /** The shell reads the display mode, the address and the discovery run. */
 function renderApp(address = '/') {
@@ -34,7 +42,11 @@ async function settleDraws() {
 }
 
 beforeEach(() => {
+  // What has been seen outlives a test in storage; every test starts afresh.
+  localStorage.clear();
   drawMock.mockResolvedValueOnce(starryNight).mockResolvedValueOnce(sunflowers);
+  openMock.mockReset();
+  openMock.mockResolvedValue(irises);
 });
 
 describe('App', () => {
@@ -54,12 +66,65 @@ describe('App', () => {
   });
 
   it('serves the "not found" screen at an address it does not know', async () => {
-    renderApp('/gallery');
+    renderApp('/nowhere');
     await settleDraws();
 
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
       'This page does not exist.',
     );
+  });
+
+  it('serves the collection chart at the gallery address, loaded on demand', async () => {
+    renderApp('/gallery');
+
+    // The screen that carries the charting library is behind `lazy`, so it
+    // arrives after its chunk does — which, with the whole suite running at
+    // once, can take longer than the default second.
+    expect(
+      await screen.findByRole(
+        'heading',
+        { level: 1, name: /You have seen \d+ artworks?\./ },
+        { timeout: 5000 },
+      ),
+    ).toBeInTheDocument();
+    // Nothing is drawn there: the gallery shows what was seen, it draws nothing.
+    expect(drawMock).not.toHaveBeenCalled();
+  });
+
+  it('opens the artwork an address names, and draws the next one behind it', async () => {
+    renderApp('/discover/3');
+    await settleDraws();
+
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Irises');
+    expect(openMock).toHaveBeenCalledWith(3, expect.anything());
+    // The run starts behind it, so the next artwork is ready when asked for;
+    // the drawn one waits its turn rather than taking the screen.
+    expect(drawMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('opens an artwork of My Gallery on Discover when it is clicked', async () => {
+    localStorage.setItem(
+      SEEN_ARTWORKS_STORAGE_KEY,
+      JSON.stringify([
+        {
+          id: 3,
+          title: 'Irises',
+          artistName: 'Vincent van Gogh',
+          displayDate: '1889',
+          imageUrl: null,
+          repository: null,
+          size: null,
+        },
+      ]),
+    );
+    renderApp('/gallery');
+
+    await userEvent.click(
+      await screen.findByRole('link', { name: 'Irises, Vincent van Gogh, 1889' }),
+    );
+    await settleDraws();
+
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Irises');
   });
 
   it('marks the current destination from the address itself', async () => {

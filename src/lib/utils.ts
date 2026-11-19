@@ -17,6 +17,7 @@ const TYPE_SCALE_NAMES = [
   'artwork-title-l',
   'artwork-title-m',
   'artwork-title-s',
+  'headline',
   'tile-title',
   'logo',
   'lead',

@@ -36,7 +36,8 @@ export function formatCentimetres(value: number): string {
   return `${Number(value.toFixed(1))}`;
 }
 
-function formatSize(artwork: Artwork): string | null {
+/** "73.7 × 92.1 cm", height first as the museum gives it; `null` when unmeasured. */
+export function formatArtworkSize(artwork: Pick<Artwork, 'size'>): string | null {
   if (artwork.size === null) {
     return null;
   }
@@ -74,7 +75,7 @@ export const ESSENTIAL_FACTS_TITLE = 'The essentials';
 export function artworkEssentialFacts(artwork: Artwork): ArtworkFact[] {
   return facts([
     ['Medium', artwork.medium],
-    ['Dimensions', formatSize(artwork)],
+    ['Dimensions', formatArtworkSize(artwork)],
     ['Surface area', formatSurfaceArea(artwork)],
     ['Held at', artwork.repository],
     ['Collection', artwork.department],

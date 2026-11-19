@@ -15,6 +15,12 @@ import { cn } from '@/lib/utils';
  * grid should do and exactly what the artwork on show must not do — the one
  * thing a visitor is waiting for cannot be the last thing requested.
  *
+ * `compact` is for a thumbnail. "No image available" needs about 160 px of
+ * width at the caption size, a 56 px thumbnail has 24 px once padded, and the
+ * frame crops whatever overflows — the words would be cut, which is worse
+ * than none. A thumbnail says "No image", with almost no padding, so it can
+ * wrap onto two short lines inside its square.
+ *
  * The picture grows by 5 % when the card around it is hovered. The frame keeps
  * `overflow: hidden`, so the artwork is cropped a little further rather than
  * spilling, and the card does not move a pixel: nothing below it reflows. The
@@ -25,12 +31,15 @@ export function ArtworkImage({
   src,
   alt,
   priority = false,
+  compact = false,
   className,
 }: {
   src: string | null;
   alt: string;
   /** True for the one picture a screen is built around. */
   priority?: boolean;
+  /** True for a thumbnail, whose fallback has to fit a small square. */
+  compact?: boolean;
   className?: string;
 }) {
   return (
@@ -41,8 +50,13 @@ export function ArtworkImage({
       )}
     >
       {src === null ? (
-        <p className="artwork-image__fallback absolute inset-0 flex items-center justify-center p-4 text-center text-caption-meta text-text-muted">
-          No image available
+        <p
+          className={cn(
+            'artwork-image__fallback absolute inset-0 flex items-center justify-center text-center text-caption-meta text-text-muted',
+            compact ? 'p-1' : 'p-4',
+          )}
+        >
+          {compact ? 'No image' : 'No image available'}
         </p>
       ) : (
         <img

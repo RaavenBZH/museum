@@ -1,5 +1,6 @@
 import { createContext } from 'react';
 import type { Artwork } from '@/domain/artwork';
+import type { SeenArtwork } from '@/domain/seenArtwork';
 
 /**
  * The state of the discovery run, held above the screens so that it survives
@@ -7,9 +8,16 @@ import type { Artwork } from '@/domain/artwork';
  * context — a visitor who walks to My Gallery and returns finds the artwork
  * they were looking at, not a new draw.
  *
- * It lives in memory only. Reloading the page starts a new run, which is
- * honest for a session-long game and costs nothing to explain.
+ * The artwork on screen lives in memory only, so reloading the page draws a
+ * new one; what has been seen is kept in the browser's storage, so it is never
+ * drawn again and My Gallery keeps it.
  */
+/** Which artwork could not be opened, and what to tell the visitor. */
+export type OpenFailure = {
+  artworkId: number;
+  message: string;
+};
+
 export type DiscoveryContextValue = {
   /** False until the run is started, which arriving on Discover does. */
   hasStarted: boolean;
@@ -30,11 +38,26 @@ export type DiscoveryContextValue = {
    * instantly and the image still has to be downloaded.
    */
   nextImageUrl: string | null;
+  /** Every artwork revealed so far, oldest first, this visit and earlier ones. */
+  seen: readonly SeenArtwork[];
   /** What to tell the visitor when the collection API refused. */
   error: string | null;
+  /**
+   * The artwork asked for by name that could not be opened, and why: unknown
+   * to the collection, without a picture, or refused by the museum. It names
+   * the artwork, so a screen shows it only at that artwork's address. The run
+   * itself goes on.
+   */
+  openFailure: OpenFailure | null;
   start: () => void;
   next: () => void;
   retry: () => void;
+  /**
+   * Puts one named artwork on screen — from My Gallery, or from its address —
+   * and starts the run behind it if it was not started. Asking for the
+   * artwork already on screen, or already being read, does nothing.
+   */
+  open: (artworkId: number) => void;
 };
 
 export const DiscoveryContext = createContext<DiscoveryContextValue | null>(null);

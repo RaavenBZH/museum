@@ -1,7 +1,7 @@
 import { fetchObject, fetchObjectIds } from '@/api/metMuseumObjects';
-import type { ObjectIdsQuery } from '@/api/metMuseumEndpoints';
 import { toArtwork, type Artwork } from '@/domain/artwork';
 import { drawArtworkId } from '@/domain/artworkDraw';
+import { DISCOVERY_COLLECTION } from '@/domain/discoveryCollection';
 
 /**
  * One random artwork of the discovery collection, in two calls that are both
@@ -27,12 +27,8 @@ import { drawArtworkId } from '@/domain/artworkDraw';
  * later costs nothing at all, and the draw happens while the visitor is
  * reading the artwork on screen, so a retry is invisible.
  *
- * European Paintings is the collection discovery starts in: 2 724 works with
- * an image, almost all of them photographed and dated, which is what a screen
- * built on one large picture needs. Choosing the collection is My Gallery's
- * business, and it will pass the department in when that screen exists.
+ * The collection it draws from is `DISCOVERY_COLLECTION`, European Paintings.
  */
-export const DISCOVERY_DEPARTMENT_ID = 11;
 
 /**
  * How many objects one draw will read before giving up. At the measured 15 %,
@@ -41,8 +37,6 @@ export const DISCOVERY_DEPARTMENT_ID = 11;
  * at all cannot turn a draw into an endless loop.
  */
 export const MAX_DRAW_ATTEMPTS = 5;
-
-const DISCOVERY_COLLECTION: ObjectIdsQuery = { departmentIds: [DISCOVERY_DEPARTMENT_ID] };
 
 export async function drawRandomArtwork({
   excludedIds,

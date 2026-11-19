@@ -9,6 +9,12 @@
       content="Explore the Metropolitan Museum of Art collection: discover one artwork at a time and read the museum's own record of it."
     />
     <title>Met Museum Explorer</title>
+    <!-- Every screen reads the museum's API and shows its pictures, so the two
+         connections are opened while the application is still loading. The
+         API is called with fetch, which is a CORS request, hence crossorigin;
+         the pictures are plain images and use the other connection pool. -->
+    <link rel="preconnect" href="https://collectionapi.metmuseum.org" crossorigin />
+    <link rel="preconnect" href="https://images.metmuseum.org" />
     <script>
       // Pin the saved mode on <html> before the first paint, otherwise the
       // stylesheet follows the system preference until React mounts and the

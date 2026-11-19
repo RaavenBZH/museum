@@ -41,4 +41,11 @@ describe('ArtworkImage', () => {
 
     expect(container.querySelector('.artwork-image')).toHaveClass('rounded-image');
   });
+
+  it('words the absence to fit a thumbnail, rather than cutting it', () => {
+    render(<ArtworkImage src={null} alt="" compact />);
+
+    expect(screen.getByText('No image')).toBeInTheDocument();
+    expect(screen.queryByText('No image available')).not.toBeInTheDocument();
+  });
 });

@@ -1,11 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fetchObject, fetchObjectIds } from '@/api/metMuseumObjects';
 import { buildObjectResource } from '@/test/artworkFixture';
-import {
-  DISCOVERY_DEPARTMENT_ID,
-  MAX_DRAW_ATTEMPTS,
-  drawRandomArtwork,
-} from './drawRandomArtwork';
+import { DISCOVERY_DEPARTMENT_ID } from '@/domain/discoveryCollection';
+import { MAX_DRAW_ATTEMPTS, drawRandomArtwork } from './drawRandomArtwork';
 
 vi.mock('@/api/metMuseumObjects', () => ({
   fetchObjectIds: vi.fn(),

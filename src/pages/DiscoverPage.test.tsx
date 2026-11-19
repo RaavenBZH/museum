@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { buildArtwork } from '@/test/artworkFixture';
 import { CONTEMPLATION_SECONDS } from '@/hooks/useArtworkContemplation';
@@ -8,26 +9,37 @@ import { DiscoverPage } from './DiscoverPage';
 
 /**
  * The page is a container: it is rendered against a run written by hand, so
- * that each of its four states is reachable without the museum.
+ * that each of its states is reachable without the museum. It is served at the
+ * two addresses of the application, and `/discover` alone stands in for the
+ * run once an artwork's address has been left.
  */
-function renderPage(run: Partial<DiscoveryContextValue> = {}) {
+function renderPage(run: Partial<DiscoveryContextValue> = {}, address = '/discover') {
   const discovery: DiscoveryContextValue = {
     hasStarted: true,
     artwork: null,
     isDrawing: false,
     isAwaitingNext: false,
     nextImageUrl: null,
+    seen: [],
     error: null,
+    openFailure: null,
     start: vi.fn(),
     next: vi.fn(),
     retry: vi.fn(),
+    open: vi.fn(),
     ...run,
   };
 
   render(
-    <DiscoveryContext.Provider value={discovery}>
-      <DiscoverPage />
-    </DiscoveryContext.Provider>,
+    <MemoryRouter initialEntries={[address]}>
+      <DiscoveryContext.Provider value={discovery}>
+        <Routes>
+          <Route path="/discover" element={<DiscoverPage />} />
+          <Route path="/discover/:artworkId" element={<DiscoverPage />} />
+          <Route path="/gallery" element={<p>My Gallery screen</p>} />
+        </Routes>
+      </DiscoveryContext.Provider>
+    </MemoryRouter>,
   );
 
   return discovery;
@@ -122,6 +134,109 @@ describe('DiscoverPage', () => {
     fireEvent.click(action);
 
     expect(discovery.next).toHaveBeenCalledTimes(1);
+  });
+
+  it('opens the artwork its address names, rather than starting a draw', () => {
+    const discovery = renderPage({ hasStarted: false }, '/discover/437984');
+
+    expect(discovery.open).toHaveBeenCalledWith(437984);
+    expect(discovery.start).not.toHaveBeenCalled();
+  });
+
+  it('says the artwork is being opened until it is the one on screen', () => {
+    // Another artwork is on screen: the one asked for is still being read.
+    renderPage({ artwork: buildArtwork({ id: 1, title: 'The Starry Night' }) }, '/discover/437984');
+
+    expect(screen.getByRole('status')).toHaveTextContent('Opening the artwork…');
+    expect(screen.queryByText('The Starry Night')).not.toBeInTheDocument();
+  });
+
+  it('shows the artwork its address names, with its whole cartel', () => {
+    renderPage({ artwork: buildArtwork() }, '/discover/437984');
+
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+      'Wheat Field with Cypresses',
+    );
+    expect(screen.getByRole('button', { name: 'Discover another' })).toBeInTheDocument();
+  });
+
+  it('says plainly when an address names no artwork, and offers the way back', () => {
+    const discovery = renderPage({}, '/discover/not-a-number');
+
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+      'This address names no artwork',
+    );
+    expect(screen.getByRole('link', { name: 'Back to My Gallery' })).toHaveAttribute(
+      'href',
+      '/gallery',
+    );
+    expect(screen.getByRole('link', { name: 'Discover' })).toHaveAttribute('href', '/discover');
+    // Nothing is asked of the museum for an address it could not answer.
+    expect(discovery.open).not.toHaveBeenCalled();
+  });
+
+  it('says why an artwork could not be opened, and offers the way back', () => {
+    renderPage(
+      { openFailure: { artworkId: 437984, message: 'The museum has no record for this artwork.' } },
+      '/discover/437984',
+    );
+
+    expect(screen.getByRole('alert')).toHaveTextContent('This artwork cannot be opened');
+    expect(screen.getByRole('alert')).toHaveTextContent('The museum has no record for this artwork.');
+    expect(screen.getByRole('link', { name: 'Back to My Gallery' })).toBeInTheDocument();
+  });
+
+  it('never shows the failure of another artwork at this address', () => {
+    renderPage(
+      { openFailure: { artworkId: 123, message: 'The museum has no record for this artwork.' } },
+      '/discover/437984',
+    );
+
+    // The failure belongs to 123; this address is still opening 437984.
+    expect(screen.queryByText('This artwork cannot be opened')).not.toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Opening the artwork…');
+  });
+
+  it('opens the artwork again on demand, after the museum failed to answer', () => {
+    const discovery = renderPage(
+      { openFailure: { artworkId: 437984, message: 'The museum is not answering.' } },
+      '/discover/437984',
+    );
+
+    vi.mocked(discovery.open).mockClear();
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+
+    expect(discovery.open).toHaveBeenCalledWith(437984);
+  });
+
+  it('shows the artwork asked for even when the draw behind it failed', () => {
+    renderPage(
+      {
+        artwork: buildArtwork({ id: 437984, title: 'Wheat Field with Cypresses' }),
+        error: 'The museum is not answering.',
+      },
+      '/discover/437984',
+    );
+
+    // That failure belongs to the next artwork, and waits for it to be asked.
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+      'Wheat Field with Cypresses',
+    );
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('returns to the run address when the next artwork is asked for from an artwork', () => {
+    vi.useFakeTimers();
+
+    const discovery = renderPage({ artwork: buildArtwork() }, '/discover/437984');
+
+    passContemplation();
+    fireEvent.click(screen.getByRole('button', { name: 'Discover another' }));
+
+    expect(discovery.next).toHaveBeenCalledTimes(1);
+    // The address names what is on screen, and what comes next is the run's.
+    expect(discovery.start).toHaveBeenCalled();
+    expect(screen.queryByText('This address names no artwork')).not.toBeInTheDocument();
   });
 
   it('has the browser fetch the picture of the artwork held in advance', () => {

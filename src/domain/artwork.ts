@@ -163,7 +163,9 @@ export function toArtwork(resource: MetObjectResource): Artwork {
 }
 
 /** `Artist, Title, 1889` — the alternative text of the picture. */
-export function artworkImageDescription(artwork: Artwork): string {
+export function artworkImageDescription(
+  artwork: Pick<Artwork, 'artistName' | 'title' | 'displayDate'>,
+): string {
   return [artwork.artistName, artwork.title, artwork.displayDate]
     .filter((part): part is string => part !== null)
     .join(', ');
@@ -175,6 +177,6 @@ export function artworkImageDescription(artwork: Artwork): string {
  * happens often enough that a frame must have a shape of its own to fall back
  * on.
  */
-export function artworkAspectRatio(artwork: Artwork): number | null {
+export function artworkAspectRatio(artwork: Pick<Artwork, 'size'>): number | null {
   return artwork.size === null ? null : artwork.size.widthCm / artwork.size.heightCm;
 }

@@ -38,6 +38,14 @@ describe('MainNavigation', () => {
     });
   });
 
+  it('keeps Discover marked on an artwork opened under it', () => {
+    renderNavigation('/discover/437984');
+
+    expect(screen.getByRole('link', { name: 'Discover' })).toHaveAttribute('aria-current', 'page');
+    // Home stays exact, or every address would count as being under `/`.
+    expect(screen.getByRole('link', { name: 'Home' })).not.toHaveAttribute('aria-current');
+  });
+
   it('marks the current destination with more than a colour', () => {
     renderNavigation('/gallery');
 

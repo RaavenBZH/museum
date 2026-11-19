@@ -81,6 +81,14 @@
   --text-artwork-title-s--letter-spacing: -0.015em;
   --text-artwork-title-s--font-weight: 600;
 
+  /* Headline of a surface card, and the figure in the middle of a ring: the
+   * My Gallery mockup sets both at 44 px, between the page headline and the
+   * tile label, and drops the headline to 30 px on a phone. */
+  --text-headline: 1.875rem; /* 30px */
+  --text-headline--line-height: 0.95;
+  --text-headline--letter-spacing: -0.045em;
+  --text-headline--font-weight: 600;
+
   --text-tile-title: 1.875rem; /* 30px */
   --text-tile-title--line-height: 1;
   --text-tile-title--letter-spacing: -0.04em;
@@ -114,6 +122,8 @@
   --text-mono--line-height: 1.4;
   --text-mono--font-weight: 400;
 
+
+
   /* Radii. These four are the only ones allowed; there is no shadow, border
    * or gradient anywhere, depth comes from the value gap between bg, surface
    * and surface-muted alone. */
@@ -139,6 +149,7 @@
   :root {
     --text-display: 4.5rem; /* 72px */
     --text-hero: 4.25rem; /* 68px */
+    --text-headline: 2.75rem; /* 44px */
     --text-artwork-title-xl: 2.75rem; /* 44px */
     --text-artwork-title-l: 2.25rem; /* 36px */
     --text-artwork-title-m: 1.75rem; /* 28px */

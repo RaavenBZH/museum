@@ -16,10 +16,13 @@ const run: DiscoveryContextValue = {
   isDrawing: false,
   isAwaitingNext: false,
   nextImageUrl: null,
+  seen: [],
   error: null,
+  openFailure: null,
   start: vi.fn(),
   next: vi.fn(),
   retry: vi.fn(),
+  open: vi.fn(),
 };
 
 describe('useDiscovery', () => {

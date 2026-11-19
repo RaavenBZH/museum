@@ -1,9 +1,10 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router';
 import { ArtworkCartel } from '@/components/discover/ArtworkCartel';
 import { ArtworkStage } from '@/components/discover/ArtworkStage';
 import { NextArtworkBar } from '@/components/discover/NextArtworkBar';
 import { NoticePanel } from '@/components/layout/NoticePanel';
-import { Button } from '@/components/ui/Button';
+import { Button, ButtonRouterLink } from '@/components/ui/Button';
 import { artworkAspectRatio, artworkImageDescription } from '@/domain/artwork';
 import {
   artworkArtistSection,
@@ -12,6 +13,7 @@ import {
   artworkRecordSections,
 } from '@/domain/artworkFacts';
 import { artworkTitleScale } from '@/domain/artworkTitleScale';
+import { DISCOVER_PATH, parseArtworkIdParam } from '@/domain/discoveryRoute';
 import { useArtworkContemplation } from '@/hooks/useArtworkContemplation';
 import { useDiscovery } from '@/hooks/useDiscovery';
 
@@ -33,8 +35,8 @@ import { useDiscovery } from '@/hooks/useDiscovery';
  *
  * It is a container and nothing else — it reads the run, turns the model into
  * the rows the cartel needs, and hands everything to presentation components
- * as props. It holds no state and makes no call: arriving here neither starts
- * a run nor draws anything by itself.
+ * as props. It holds no state and makes no call: it tells the run what the
+ * visitor asked for — start, open, next — and the run does the calling.
  *
  * Three states, and they are all reachable: the first draw says it is under
  * way, a refusal from the museum says which refusal it was and offers to try
@@ -50,6 +52,13 @@ import { useDiscovery } from '@/hooks/useDiscovery';
  * `useArtworkContemplation`. The delay is held here rather than in the run,
  * because it is about this screen's reading and not about the draw: leaving
  * Discover and coming back gives the artwork a fresh moment, which is right.
+ *
+ * At `/discover/{objectID}` the screen shows that one artwork — the one a
+ * visitor clicked in My Gallery, or whose address they were given — with its
+ * whole cartel, as if it had been drawn. An address that names no artwork,
+ * an artwork outside the collection or one without a picture each say so and
+ * offer the way back, never a blank screen. Asking for the next artwork from
+ * there returns to `/discover`, so the address always names what is shown.
  */
 
 /**
@@ -80,16 +89,95 @@ function NextArtworkSection({
   );
 }
 export function DiscoverPage() {
-  const { artwork, isDrawing, isAwaitingNext, nextImageUrl, error, start, next, retry } =
-    useDiscovery();
+  const {
+    artwork,
+    isDrawing,
+    isAwaitingNext,
+    nextImageUrl,
+    error,
+    openFailure,
+    start,
+    next,
+    retry,
+    open,
+  } = useDiscovery();
+  const navigate = useNavigate();
+  const { artworkId: artworkIdParam } = useParams();
+  const isNamedAddress = artworkIdParam !== undefined;
+  const requestedId = parseArtworkIdParam(artworkIdParam);
 
-  // Arriving on the screen is what starts the run. Starting again is a no-op,
-  // so coming back to Discover draws nothing.
+  // Arriving on the screen is what starts the run, and arriving at an
+  // artwork's address is what opens it. Both are no-ops when repeated, so
+  // coming back draws nothing and reads nothing again.
   useEffect(() => {
-    start();
-  }, [start]);
+    if (!isNamedAddress) {
+      start();
+    } else if (requestedId !== null) {
+      open(requestedId);
+    }
+  }, [isNamedAddress, requestedId, start, open]);
 
-  if (error !== null) {
+  // From an artwork's address, the next artwork is the run's, not this
+  // address's: going back to `/discover` keeps the address true to the screen.
+  const handleNext = useCallback(() => {
+    next();
+
+    if (isNamedAddress) {
+      navigate(DISCOVER_PATH);
+    }
+  }, [next, isNamedAddress, navigate]);
+
+  const wayBack = (
+    <div className="discover-page__way-back flex flex-wrap items-center gap-3">
+      <ButtonRouterLink variant="primary" to="/gallery">
+        Back to My Gallery
+      </ButtonRouterLink>
+      <ButtonRouterLink variant="secondary" to={DISCOVER_PATH}>
+        Discover
+      </ButtonRouterLink>
+    </div>
+  );
+
+  if (isNamedAddress && requestedId === null) {
+    return (
+      <NoticePanel
+        className="discover-page__unknown-address"
+        title="This address names no artwork"
+        lead="An artwork opens at /discover/ followed by its number in the museum's collection, and this one is not a number."
+        action={wayBack}
+      />
+    );
+  }
+
+  // Only this address's own failure: one left by another artwork would
+  // otherwise show for a frame before this one is asked for.
+  if (isNamedAddress && requestedId !== null && openFailure?.artworkId === requestedId) {
+    return (
+      <NoticePanel
+        className="discover-page__open-error"
+        title="This artwork cannot be opened"
+        lead={openFailure.message}
+        role="alert"
+        action={
+          <div className="discover-page__open-error-actions flex flex-wrap items-center gap-3">
+            <Button variant="primary" onClick={() => open(requestedId)}>
+              Try again
+            </Button>
+            <ButtonRouterLink variant="secondary" to="/gallery">
+              Back to My Gallery
+            </ButtonRouterLink>
+          </div>
+        }
+      />
+    );
+  }
+
+  // The artwork asked for by its address comes first: a draw failing behind it
+  // — the one meant for "Discover another" — must not take its place. That
+  // failure is shown when the visitor actually asks for the next artwork.
+  const isShowingRequested = isNamedAddress && artwork !== null && artwork.id === requestedId;
+
+  if (error !== null && !isShowingRequested) {
     return (
       <NoticePanel
         className="discover-page__error"
@@ -101,6 +189,18 @@ export function DiscoverPage() {
             Try again
           </Button>
         }
+      />
+    );
+  }
+
+  if (isNamedAddress && artwork?.id !== requestedId) {
+    return (
+      <NoticePanel
+        className="discover-page__opening"
+        title="Opening the artwork…"
+        lead="Reading its record in the collection of the Metropolitan Museum of Art."
+        role="status"
+        isBusy
       />
     );
   }
@@ -128,7 +228,7 @@ export function DiscoverPage() {
           imageAlt={artworkImageDescription(artwork)}
           aspectRatio={artworkAspectRatio(artwork)}
         />
-        <NextArtworkSection key={artwork.id} isAwaitingNext={isAwaitingNext} onNext={next} />
+        <NextArtworkSection key={artwork.id} isAwaitingNext={isAwaitingNext} onNext={handleNext} />
       </div>
 
       <ArtworkCartel

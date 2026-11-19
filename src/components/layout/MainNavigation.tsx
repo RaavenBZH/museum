@@ -13,9 +13,11 @@ export interface MainNavigationItem {
  *
  * Both marks come from the router: `NavLink` compares its own address to the
  * one being shown, so the mark and the screen can never disagree, and no
- * screen has to be told which of its links is the current one. `end` is what
- * makes the home item behave — without it every address counts as being
- * "under" `/`, and Home would be marked on every screen.
+ * screen has to be told which of its links is the current one. `end` is set on
+ * the home item alone: without it every address counts as being "under" `/`,
+ * and Home would be marked on every screen. The other destinations own the
+ * addresses under them — an artwork opened at `/discover/437984` is still
+ * Discover — so they match by prefix.
  *
  * Every link is semibold and at the same size, the current one included: a weight
  * or size change would make the word itself grow and move its neighbours each
@@ -55,7 +57,7 @@ export function MainNavigation({
             )
           }
           to={item.href}
-          end
+          end={item.href === '/'}
         >
           {item.label}
         </NavLink>
