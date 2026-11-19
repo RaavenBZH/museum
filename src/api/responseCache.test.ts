@@ -88,6 +88,29 @@ describe('createResponseCache', () => {
     expect(load).toHaveBeenCalledTimes(4);
   });
 
+  it('forgets a call in flight, so the next caller starts a new one', async () => {
+    const cache = createResponseCache();
+    const load = vi.fn(async () => 'first');
+
+    const abandoned = cache.load('key', load);
+    cache.forget('key');
+
+    await expect(cache.load('key', vi.fn(async () => 'second'))).resolves.toBe('second');
+    await expect(abandoned).resolves.toBe('first');
+    expect(load).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps what it knows when a call in flight is forgotten', async () => {
+    const cache = createResponseCache();
+
+    await cache.load('key', async () => 'value');
+    cache.forget('key');
+
+    // Only the pending call is dropped: a settled answer is still known.
+    await expect(cache.load('key', async () => 'other')).resolves.toBe('value');
+    expect(cache.size).toBe(1);
+  });
+
   it('forgets everything when cleared', async () => {
     const cache = createResponseCache();
     const load = vi.fn(async () => 'value');

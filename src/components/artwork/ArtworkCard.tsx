@@ -4,7 +4,7 @@ import {
   bentoTileClassName,
   type BentoTileFormat,
 } from '@/components/layout/bentoTileFormats';
-import { DatePill } from '@/components/ui/DatePill';
+import { ArtworkYear } from '@/components/ui/ArtworkYear';
 import { cn } from '@/lib/utils';
 
 /** The four tile formats an artwork can take; the other two are not artworks. */
@@ -89,7 +89,7 @@ export function ArtworkCard({
             <span className="artwork-card__title line-clamp-2 min-w-0 flex-1 text-caption-title">
               {title}
             </span>
-            <DatePill className="min-w-0 max-w-[45%] truncate">{year}</DatePill>
+            <ArtworkYear className="min-w-0 max-w-[45%] truncate">{year}</ArtworkYear>
           </span>
           <span className="artwork-card__artist truncate text-caption-meta text-text-muted">
             {artist}

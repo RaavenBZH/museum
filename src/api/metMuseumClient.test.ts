@@ -33,7 +33,10 @@ describe('createMetMuseumClient', () => {
     const client = clientWith(fetchImpl as unknown as typeof fetch);
 
     await expect(client.getJson(url)).resolves.toEqual({ total: 1, objectIDs: [1] });
-    expect(fetchImpl).toHaveBeenCalledWith(url, { headers: { Accept: 'application/json' } });
+    expect(fetchImpl).toHaveBeenCalledWith(url, {
+      headers: { Accept: 'application/json' },
+      signal: expect.any(AbortSignal),
+    });
   });
 
   it('checks the status before the body, and names the three failures apart', async () => {
@@ -91,7 +94,7 @@ describe('createMetMuseumClient', () => {
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
-  it('rejects at once when the caller aborts, and fills the cache all the same', async () => {
+  it('rejects at once when the caller aborts, and spends no call on it', async () => {
     const fetchImpl = vi.fn(async () => jsonResponse({ total: 1 }));
     const client = clientWith(fetchImpl as unknown as typeof fetch);
     const controller = new AbortController();
@@ -101,7 +104,56 @@ describe('createMetMuseumClient', () => {
 
     await expect(aborted).rejects.toMatchObject({ name: 'AbortError' });
 
-    // The answer of the abandoned call still serves the next mount.
+    // Nobody was left waiting, so the museum was never asked: this is the
+    // budget that an abandoned draw would otherwise spend.
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it('keeps the request for the callers that are still waiting', async () => {
+    const fetchImpl = vi.fn(async () => jsonResponse({ total: 1 }));
+    const client = clientWith(fetchImpl as unknown as typeof fetch);
+    const leaving = new AbortController();
+
+    const abandoned = client.getJson(url, { signal: leaving.signal });
+    const waiting = client.getJson(url);
+
+    leaving.abort();
+
+    await expect(abandoned).rejects.toMatchObject({ name: 'AbortError' });
+    // One caller leaving must not take the answer away from the other.
+    await expect(waiting).resolves.toEqual({ total: 1 });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it('serves a caller that asks again in the same turn from the same request', async () => {
+    const fetchImpl = vi.fn(async () => jsonResponse({ total: 1 }));
+    const client = clientWith(fetchImpl as unknown as typeof fetch);
+    const first = new AbortController();
+
+    // What a remount does: abandon the wait, then ask for the same URL again
+    // before the turn is over. React does exactly this in development.
+    const abandoned = client.getJson(url, { signal: first.signal });
+
+    first.abort();
+
+    const remounted = client.getJson(url, { signal: new AbortController().signal });
+
+    await expect(abandoned).rejects.toMatchObject({ name: 'AbortError' });
+    await expect(remounted).resolves.toEqual({ total: 1 });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it('starts a new request for a caller that arrives after the last one left', async () => {
+    const fetchImpl = vi.fn(async () => jsonResponse({ total: 1 }));
+    const client = clientWith(fetchImpl as unknown as typeof fetch);
+    const controller = new AbortController();
+
+    const abandoned = client.getJson(url, { signal: controller.signal });
+    controller.abort();
+    await expect(abandoned).rejects.toMatchObject({ name: 'AbortError' });
+
+    // The dropped call is not remembered as a result, so the next visitor is
+    // served a real answer rather than the abandonment.
     await expect(client.getJson(url)).resolves.toEqual({ total: 1 });
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });

@@ -6,13 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Explore the Metropolitan Museum of Art collection: browse artworks, read their details and see how a department's holdings are distributed."
+      content="Explore the Metropolitan Museum of Art collection: discover one artwork at a time and read the museum's own record of it."
     />
     <title>Met Museum Explorer</title>
     <script>
       // Pin the saved mode on <html> before the first paint, otherwise the
       // stylesheet follows the system preference until React mounts and the
-      // wrong mode flashes. Key and values mirror src/components/theme/themeModes.ts.
+      // wrong mode flashes. Key and values mirror src/domain/themeModes.ts.
       try {
         const mode = localStorage.getItem('museum:theme-mode');
 

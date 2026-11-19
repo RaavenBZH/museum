@@ -4,6 +4,7 @@ import {
   type MainNavigationItem,
 } from '@/components/layout/MainNavigation';
 import { ThemeModeSwitch } from '@/components/theme/ThemeModeSwitch';
+import type { ResolvedThemeMode } from '@/domain/themeModes';
 
 /**
  * The bar at the top of every screen: logotype, navigation, one action. The
@@ -29,12 +30,25 @@ import { ThemeModeSwitch } from '@/components/theme/ThemeModeSwitch';
  * a grid item at all, and without `col-start-3` the action would slide into
  * the middle column on a phone.
  */
-export function AppHeader({ navigation }: { navigation: readonly MainNavigationItem[] }) {
+export function AppHeader({
+  navigation,
+  themeMode,
+  onThemeModeChange,
+}: {
+  navigation: readonly MainNavigationItem[];
+  /** The mode on screen, which the switch marks as the current side. */
+  themeMode: ResolvedThemeMode;
+  onThemeModeChange: (mode: ResolvedThemeMode) => void;
+}) {
   return (
     <header className="app-header grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4 py-6">
-      <BrandLogoLink />
-      <MainNavigation className="col-start-2" items={navigation} />
-      <ThemeModeSwitch className="app-header__action col-start-3 justify-self-end" />
+      <BrandLogoLink className="app-header__brand" />
+      <MainNavigation className="app-header__navigation col-start-2" items={navigation} />
+      <ThemeModeSwitch
+        className="app-header__action col-start-3 justify-self-end"
+        resolvedMode={themeMode}
+        onModeChange={onThemeModeChange}
+      />
     </header>
   );
 }

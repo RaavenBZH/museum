@@ -185,6 +185,29 @@ describe('DiscoveryProvider', () => {
     expect(screen.getByText('awaiting: false')).toBeInTheDocument();
   });
 
+  it('never re-issues a draw that is already in flight', async () => {
+    renderRun();
+    await userEvent.click(screen.getByRole('button', { name: 'start' }));
+    await completeDraw(starryNight);
+
+    // The buffer is empty again, so one draw is in flight. Asking for the next
+    // artwork while it is must not abandon it and send it a second time: the
+    // effect's cleanup only fires when its two dependencies change identity,
+    // and every dispatch made during a draw keeps them. One `case` of the
+    // reducer rebuilding `seenIds` or `ahead` for nothing would double the
+    // calls to the museum without a single test failing anywhere else.
+    expect(drawMock).toHaveBeenCalledTimes(2);
+
+    await userEvent.click(screen.getByRole('button', { name: 'next' }));
+
+    expect(drawMock).toHaveBeenCalledTimes(2);
+
+    await completeDraw(sunflowers);
+
+    // And once it has landed, exactly one draw is started to refill the buffer.
+    expect(drawMock).toHaveBeenCalledTimes(3);
+  });
+
   it('offers the picture of the artwork held in advance, for the screen to fetch', async () => {
     renderRun();
     await userEvent.click(screen.getByRole('button', { name: 'start' }));

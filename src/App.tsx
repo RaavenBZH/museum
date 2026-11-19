@@ -3,6 +3,7 @@ import { AppFooter } from '@/components/layout/AppFooter';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { ErrorBoundary } from '@/components/layout/ErrorBoundary';
 import type { MainNavigationItem } from '@/components/layout/MainNavigation';
+import { useTheme } from '@/hooks/useTheme';
 import { DiscoverPage } from '@/pages/DiscoverPage';
 import { HomePage } from '@/pages/HomePage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
@@ -38,11 +39,21 @@ const MAIN_NAVIGATION: readonly MainNavigationItem[] = [
  * The boundary is around the screen alone and not around the shell: a screen
  * that throws is replaced, while the bar and the foot stay where they are, so
  * the visitor keeps the way out.
+ *
+ * The display mode is read here and handed down as props, because everything
+ * under `components/` is presentation without state: the shell is the lowest
+ * place that can read the run and the mode and still pass them on.
  */
 export function App() {
+  const { resolvedMode, setMode } = useTheme();
+
   return (
     <div className="app-shell mx-auto flex min-h-dvh w-full max-w-page flex-col px-4 desktop:px-10">
-      <AppHeader navigation={MAIN_NAVIGATION} />
+      <AppHeader
+        navigation={MAIN_NAVIGATION}
+        themeMode={resolvedMode}
+        onThemeModeChange={setMode}
+      />
 
       <main className="app-shell__main flex flex-1 flex-col py-6">
         <ErrorBoundary>

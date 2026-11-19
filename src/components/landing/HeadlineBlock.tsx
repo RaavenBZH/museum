@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 import { bentoTileClassName } from '@/components/layout/bentoTileFormats';
 import { cn } from '@/lib/utils';
 
@@ -27,6 +27,9 @@ export function HeadlineBlock({
   actions?: ReactNode;
   className?: string;
 }) {
+  // The block's own headline names the region, the way the band below it does.
+  const headlineId = useId();
+
   return (
     <section
       className={cn(
@@ -34,11 +37,12 @@ export function HeadlineBlock({
         bentoTileClassName('headline'),
         className,
       )}
+      aria-labelledby={headlineId}
     >
       {badge === undefined ? null : <span className="headline-block__badge">{badge}</span>}
 
       <div className="headline-block__text flex flex-col gap-5">
-        <h1 className="headline-block__headline text-hero">
+        <h1 id={headlineId} className="headline-block__headline text-hero">
           {firstLine}
           <br />
           <span className="headline-block__headline-second-line text-text-subtle">

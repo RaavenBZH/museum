@@ -15,6 +15,13 @@ import type { MetObjectResource } from '@/api/metMuseumObjects';
  *   on view carry `isOnView: false`. The gallery number is the one honest
  *   signal, so it is what the model keeps.
  */
+/**
+ * What stands in for an artist the museum has not recorded. It is wording
+ * about a missing field of the model, so it is held with the model: the
+ * cartel and the landing page would otherwise word the same absence twice.
+ */
+export const UNKNOWN_ARTIST_LABEL = 'Artist unrecorded';
+
 export type ArtworkSize = {
   heightCm: number;
   widthCm: number;

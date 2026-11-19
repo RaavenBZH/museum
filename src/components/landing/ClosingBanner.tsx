@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
 /**
@@ -35,12 +35,17 @@ export function ClosingBanner({
   textureImageUrl?: string;
   className?: string;
 }) {
+  // A region with no name is not announced as one: the band's own headline is
+  // what names it, so it is tied to the section rather than repeated.
+  const headlineId = useId();
+
   return (
     <section
       className={cn(
         'closing-banner group relative flex flex-col items-start gap-8 overflow-hidden rounded-card bg-inverse-bg p-14 text-inverse-text desktop:flex-row desktop:items-end desktop:justify-between',
         className,
       )}
+      aria-labelledby={headlineId}
     >
       {textureImageUrl === undefined ? null : (
         <>
@@ -58,7 +63,7 @@ export function ClosingBanner({
         </>
       )}
 
-      <h2 className="closing-banner__headline relative text-display">
+      <h2 id={headlineId} className="closing-banner__headline relative text-display">
         {firstLine}
         <br />
         <span className="closing-banner__headline-second-line text-inverse-muted">

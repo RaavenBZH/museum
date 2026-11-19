@@ -2,8 +2,8 @@ import { act, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CONTEMPLATION_SECONDS, useArtworkContemplation } from './useArtworkContemplation';
 
-function ContemplationProbe({ artworkId }: { artworkId: number | null }) {
-  const { isLocked, secondsLeft } = useArtworkContemplation(artworkId);
+function ContemplationProbe() {
+  const { isLocked, secondsLeft } = useArtworkContemplation();
 
   return (
     <p>
@@ -34,13 +34,13 @@ describe('useArtworkContemplation', () => {
   });
 
   it('holds the way shut as soon as an artwork is on screen', () => {
-    render(<ContemplationProbe artworkId={1} />);
+    render(<ContemplationProbe />);
 
     expect(screen.getByText(`locked: true · ${CONTEMPLATION_SECONDS}`)).toBeInTheDocument();
   });
 
   it('counts down in whole seconds, then opens', () => {
-    render(<ContemplationProbe artworkId={1} />);
+    render(<ContemplationProbe />);
 
     passSeconds(1);
     expect(screen.getByText('locked: true · 2')).toBeInTheDocument();
@@ -53,34 +53,38 @@ describe('useArtworkContemplation', () => {
   });
 
   it('stays open once it has opened', () => {
-    render(<ContemplationProbe artworkId={1} />);
+    render(<ContemplationProbe />);
 
     passSeconds(30);
 
     expect(screen.getByText('locked: false · 0')).toBeInTheDocument();
   });
 
-  it('starts again on the next artwork, and only on it', () => {
-    const { rerender } = render(<ContemplationProbe artworkId={1} />);
+  it('keeps counting the same moment while it stays on the same artwork', () => {
+    const { rerender } = render(<ContemplationProbe />);
 
     passSeconds(CONTEMPLATION_SECONDS);
     expect(screen.getByText('locked: false · 0')).toBeInTheDocument();
 
-    rerender(<ContemplationProbe artworkId={1} />);
+    // Re-rendering is not a new artwork: only a new key is, which is what the
+    // Discover screen gives it.
+    rerender(<ContemplationProbe />);
+    expect(screen.getByText('locked: false · 0')).toBeInTheDocument();
+  });
+
+  it('starts a full moment again when the caller mounts it for a new artwork', () => {
+    const { rerender } = render(<ContemplationProbe key={1} />);
+
+    passSeconds(CONTEMPLATION_SECONDS);
     expect(screen.getByText('locked: false · 0')).toBeInTheDocument();
 
-    rerender(<ContemplationProbe artworkId={2} />);
+    rerender(<ContemplationProbe key={2} />);
+
     expect(screen.getByText(`locked: true · ${CONTEMPLATION_SECONDS}`)).toBeInTheDocument();
   });
 
-  it('holds nothing shut while there is no artwork to look at', () => {
-    render(<ContemplationProbe artworkId={null} />);
-
-    expect(screen.getByText('locked: false · 0')).toBeInTheDocument();
-  });
-
   it('drops its timer when it is unmounted', () => {
-    const { unmount } = render(<ContemplationProbe artworkId={1} />);
+    const { unmount } = render(<ContemplationProbe />);
 
     unmount();
 

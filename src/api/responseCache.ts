@@ -12,8 +12,8 @@
  * It holds no React: it is a plain object, which is what makes it testable
  * without mounting anything and shareable by the hooks layer later on.
  */
-export const DEFAULT_CACHE_TTL_MS = 60 * 60 * 1000;
-export const DEFAULT_CACHE_MAX_ENTRIES = 500;
+const DEFAULT_CACHE_TTL_MS = 60 * 60 * 1000;
+const DEFAULT_CACHE_MAX_ENTRIES = 500;
 
 type CacheEntry = {
   value: unknown;
@@ -26,6 +26,12 @@ export type ResponseCache = {
    * `load` and caches what it resolves to. A rejection is never cached.
    */
   load: <T>(key: string, load: () => Promise<T>, ttlMs?: number) => Promise<T>;
+  /**
+   * Drops the call in flight for `key`, so the next caller starts a new one
+   * instead of joining a request that is being abandoned. Settled values are
+   * kept: forgetting a *pending* call is not forgetting what is known.
+   */
+  forget: (key: string) => void;
   /** How many settled responses are held, pending calls excluded. */
   readonly size: number;
   /** Forgets everything; the pages never need it, the tests do. */
@@ -103,6 +109,10 @@ export function createResponseCache(options: ResponseCacheOptions = {}): Respons
       pending.set(key, call);
 
       return call;
+    },
+
+    forget(key: string): void {
+      pending.delete(key);
     },
 
     get size(): number {

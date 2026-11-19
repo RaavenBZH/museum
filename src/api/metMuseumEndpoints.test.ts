@@ -12,20 +12,10 @@ describe('objectIdsUrl', () => {
     );
   });
 
-  it('carries both filters at once', () => {
-    expect(objectIdsUrl({ departmentIds: [11], metadataDate: '2026-11-13' })).toBe(
-      'https://collectionapi.metmuseum.org/public/collection/v1/objects?departmentIds=11&metadataDate=2026-11-13',
-    );
-  });
-
   it('refuses a filter that would address the whole collection by mistake', () => {
     expect(() => objectIdsUrl({ departmentIds: [] })).toThrow(RangeError);
     expect(() => objectIdsUrl({ departmentIds: [0] })).toThrow(RangeError);
     expect(() => objectIdsUrl({ departmentIds: [1.5] })).toThrow(RangeError);
-  });
-
-  it('refuses a date the museum would ignore', () => {
-    expect(() => objectIdsUrl({ metadataDate: '13/11/2026' })).toThrow(RangeError);
   });
 });
 

@@ -1,9 +1,8 @@
 import type { ComponentType } from 'react';
 import { MoonIcon } from '@/components/icons/MoonIcon';
 import { SunIcon } from '@/components/icons/SunIcon';
+import { THEME_MODE_LABELS, type ResolvedThemeMode } from '@/domain/themeModes';
 import { cn } from '@/lib/utils';
-import { THEME_MODE_LABELS, type ResolvedThemeMode } from './themeModes';
-import { useTheme } from './useTheme';
 
 /**
  * The two sides of the switch, day then night, in the order they are read.
@@ -29,9 +28,22 @@ const THEME_MODE_OPTIONS: readonly { mode: ResolvedThemeMode; Icon: ComponentTyp
  *
  * Each button is 44 x 44 px, the smallest touch target the system allows, and
  * the icons inside are labelled by the buttons.
+ *
+ * It owns no state and reads no context: the mode on screen comes in as a
+ * prop and the choice goes back out as a call, so the switch can be rendered
+ * and tested anywhere, and the mode keeps one owner — `ThemeProvider`.
  */
-export function ThemeModeSwitch({ className }: { className?: string }) {
-  const { resolvedMode, setMode } = useTheme();
+export function ThemeModeSwitch({
+  resolvedMode,
+  onModeChange,
+  className,
+}: {
+  /** The mode currently painted, `system` already resolved. */
+  resolvedMode: ResolvedThemeMode;
+  /** Called with the side that was pressed, which pins that mode. */
+  onModeChange: (mode: ResolvedThemeMode) => void;
+  className?: string;
+}) {
 
   return (
     <div
@@ -54,7 +66,7 @@ export function ThemeModeSwitch({ className }: { className?: string }) {
             )}
             aria-label={`${THEME_MODE_LABELS[mode]} mode`}
             aria-pressed={isCurrent}
-            onClick={() => setMode(mode)}
+            onClick={() => onModeChange(mode)}
           >
             <Icon />
           </button>

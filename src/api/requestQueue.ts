@@ -5,7 +5,7 @@
  * entirely, so every call of the transport layer goes through this queue:
  * one request at a time, never closer than `minIntervalMs`.
  */
-export const DEFAULT_MIN_REQUEST_INTERVAL_MS = 400;
+const DEFAULT_MIN_REQUEST_INTERVAL_MS = 400;
 
 export type RequestQueue = {
   /** Runs `task` once the previous one is done and the interval has elapsed. */

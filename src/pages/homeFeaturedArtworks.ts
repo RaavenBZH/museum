@@ -1,4 +1,5 @@
 import type { ArtworkCardProps } from '@/components/artwork/ArtworkCard';
+import { UNKNOWN_ARTIST_LABEL } from '@/domain/artwork';
 
 /**
  * The seven artworks of the home page.
@@ -51,7 +52,7 @@ export const HOME_FEATURED_ARTWORKS: readonly ArtworkCardProps[] = [
   artwork(322585, {
     format: 'panoramic',
     title: 'Panel with striding lion',
-    artist: 'Unknown',
+    artist: UNKNOWN_ARTIST_LABEL,
     year: 'ca. 604–562 BCE',
     imageUrl: 'https://images.metmuseum.org/CRDImages/an/web-large/DT891.jpg',
   }),

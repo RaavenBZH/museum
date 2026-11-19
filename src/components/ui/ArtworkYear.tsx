@@ -10,10 +10,10 @@ import { cn } from '@/lib/utils';
  * in every tile. The surface is reserved for things that really are labels,
  * which is `Badge`.
  */
-export function DatePill({ children, className }: { children: string; className?: string }) {
+export function ArtworkYear({ children, className }: { children: string; className?: string }) {
   return (
     <span
-      className={cn('date-pill whitespace-nowrap font-mono text-mono text-text-muted', className)}
+      className={cn('artwork-year whitespace-nowrap font-mono text-mono text-text-muted', className)}
     >
       {children}
     </span>

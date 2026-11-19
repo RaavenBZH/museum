@@ -61,6 +61,12 @@ function facts(rows: readonly (readonly [string, string | null])[]): ArtworkFact
 }
 
 /**
+ * The heading of the unfolded block. Every other block of the record names
+ * itself from here, so this one does too rather than from the component.
+ */
+export const ESSENTIAL_FACTS_TITLE = 'The essentials';
+
+/**
  * What a visitor asks first: what it is made of, how big it is, where it is
  * kept and which collection it was drawn from. These are also the fields the
  * API fills most reliably.

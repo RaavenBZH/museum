@@ -50,7 +50,7 @@ export function MainNavigation({
           key={item.href}
           className={({ isActive }) =>
             cn(
-              'main-navigation__link inline-flex min-h-10 items-center rounded-pill px-4 text-caption-short font-semibold no-underline',
+              'main-navigation__link inline-flex min-h-11 items-center rounded-pill px-4 text-caption-short font-semibold no-underline',
               isActive && 'main-navigation__link--current bg-inverse-bg text-inverse-text',
             )
           }

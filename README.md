@@ -105,29 +105,52 @@ pnpm test:watch  # run the tests in watch mode while developing
 ├── tsconfig.app.json                 # TypeScript options for the application sources
 ├── tsconfig.node.json                # TypeScript options for the build tooling
 └── src
-    ├── main.tsx                      # React entry point, mounts <App /> in StrictMode
-    ├── App.tsx                       # application root component and page shell
+    ├── main.tsx                      # React entry point: providers, router, <App />
+    ├── App.tsx                       # page shell and routes
     ├── index.css                     # stylesheet entry point: Tailwind, fonts, tokens
     ├── styles
     │   ├── design-tokens.css         # colour, type, spacing, radii tokens and the two modes
     │   └── shadcn-tokens.css         # maps shadcn/ui variable names onto those tokens
-    ├── components
-    │   ├── brand
-    │   │   └── BrandLogo.tsx         # the logotype: four-bar mark plus product name
-    │   ├── layout
-    │   │   ├── AppHeader.tsx         # logotype and mode switch
-    │   │   └── AppFooter.tsx         # product name and data attribution
-    │   ├── theme
-    │   │   ├── themeModes.ts         # the Sand / Cocoa modes and their storage key
-    │   │   ├── ThemeContext.ts       # React context holding the current mode
-    │   │   ├── ThemeProvider.tsx     # resolves the mode, writes data-theme, persists it
-    │   │   ├── useTheme.ts           # hook reading the theme context
-    │   │   └── ThemeToggleButton.tsx # switches between the two modes
-    │   └── ui
-    │       └── Button.tsx            # the pill button on the muted surface
+    ├── api                           # the only layer that calls fetch
+    │   ├── metMuseumEndpoints.ts     # every URL of the collection API
+    │   ├── metMuseumErrors.ts        # one error type per way a call can fail
+    │   ├── requestQueue.ts           # spaces the calls, to stay under the IP block
+    │   ├── responseCache.ts          # one answer per URL, with in-flight sharing
+    │   ├── metMuseumClient.ts        # GET as JSON: status, queue, cache, abort
+    │   └── metMuseumObjects.ts       # the two object endpoints, read through the client
+    ├── domain                        # pure model: no React, no fetch
+    │   ├── artwork.ts                # type Artwork and the mapper from the payload
+    │   ├── artworkFacts.ts           # the rows and blocks of the record
+    │   ├── artworkTitleScale.ts      # which step a title is set at, by its length
+    │   ├── artworkDraw.ts            # drawing one identifier at random
+    │   ├── collectionError.ts        # what to tell a visitor about a refusal
+    │   └── themeModes.ts             # the Sand / Cocoa modes and their storage key
+    ├── hooks                         # React state, held above the router
+    │   ├── DiscoveryProvider.tsx     # the discovery run: one shown, one held ahead
+    │   ├── DiscoveryContext.ts       # the shape of that run
+    │   ├── useDiscovery.ts           # reads the run
+    │   ├── drawRandomArtwork.ts      # one draw, skipping the objects with no picture
+    │   ├── useArtworkContemplation.ts # the three seconds an artwork is given
+    │   ├── ThemeProvider.tsx         # resolves the mode, writes data-theme, persists it
+    │   ├── ThemeContext.ts           # React context holding the current mode
+    │   └── useTheme.ts               # reads the mode
+    ├── pages                         # one screen per route
+    │   ├── HomePage.tsx              # the bento landing page
+    │   ├── DiscoverPage.tsx          # one artwork at a time, with its record
+    │   └── NotFoundPage.tsx          # unknown address, with the way home
+    ├── components                    # presentation only: props in, nothing else
+    │   ├── brand                     # the logotype, and the logotype as a link home
+    │   ├── layout                    # header, navigation, footer, bento, notice, boundary
+    │   ├── theme                     # the day / night switch
+    │   ├── landing                   # headline block, action tile, closing banner
+    │   ├── artwork                   # artwork card and artwork image
+    │   ├── discover                  # stage, cartel, fact section, next-artwork band
+    │   ├── icons                     # the five icons of the system
+    │   └── ui                        # button, badge, artwork year
     ├── lib
     │   └── utils.ts                  # re-exports the cn() class-name helper
     └── test
+        ├── artworkFixture.ts         # the artwork the tests are written against
         └── setupTestingLibrary.ts    # jest-dom matchers, DOM cleanup, matchMedia stub
 ```
 
@@ -135,6 +158,18 @@ Modules are imported through the `@` alias, which points at `src`: `@/lib/utils`
 rather than a chain of relative segments. It is declared once in
 `tsconfig.json` and once in `vite.config.ts`, so the compiler, the bundler and
 the test runner all resolve it.
+
+The four layers only ever depend downwards — `pages/` reads `hooks/`, which
+reads `domain/`, which reads `api/` — and `components/` sits outside that
+chain: it takes props and nothing else, which is why the display mode and the
+discovery run are read in `App.tsx` and handed down rather than reached for
+from inside a component.
+
+Both React contexts are created with `null` as their default and their hooks
+throw when they are used outside their provider, instead of handing out a
+default value of the right shape. A provider missing from the tree is a
+programming mistake, and a named error caught by the boundary says so, where a
+half-state would fail somewhere else and later.
 
 ### AI-assisted Design system
 
@@ -207,6 +242,8 @@ listed, including the parts of this README.
 | API exploration | Measured field fill rates across six departments and found three traps: the object payload's `isOnView` field is wrong, the `isPublicDomain` search filter is ignored, and the real rate limit is an IP block rather than the documented 80 requests per second | Reviewed the findings and chose what to keep |
 | Bug fixing | Found and fixed its own defects: a `node_modules` volume that retained removed packages, duplicate `Cache-Control` headers, a deprecated `baseUrl`, three unused dependencies, a leftover placeholder favicon, and a flash of the wrong colour mode on every reload | Reviewed, and reported the colour mode flash |
 | Design system | Wrote the specification under my direction, then installed it: the tokens, the two modes, the type scale, the logotype and favicon, the first components and `docs/DESIGN_SYSTEM.md` | **Decided** the visual direction and the constraints it had to satisfy; chose the terracotta accent pair; reviewed the result in both modes |
+| Collection API layer | Wrote the four layers that read the museum — URL builder, error types, request queue, response cache with in-flight sharing and abort, and the two object endpoints — with their tests, after measuring that the real limit is an IP block around 140 calls rather than the documented 80 requests per second | **Decided** to read `GET /objects` and chain `GET /objects/{objectID}` behind it so a detail call is only ever made with a valid identifier; reviewed the caching and the spacing |
+| Discover screen | Implemented the screen from my own design canvas: the run held above the router, one artwork shown and one held ahead, the random draw that skips the 15 % of objects the museum has never photographed, the artwork-title scale, the three-second pause on the action, and the tests | **Decided** the concept and the layout, drew both artboards, reported the two cases where no image appeared, and asked for the artwork to survive leaving the screen and coming back |
 | Code review | Reviews each component it writes against the two references it must follow — `docs/DESIGN_SYSTEM.md` and the React practices document — and reports every raw colour, off-scale spacing, accessibility slip and rule violation, so that files written at different moments stay harmonised | Asked for that review to run on every interface change before a commit; decided which findings to apply |
 
 Three guidance documents used while building the project are kept outside the

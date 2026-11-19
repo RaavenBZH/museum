@@ -22,7 +22,7 @@ export function AppFooter() {
         Artwork data from the{' '}
         <a
           className="app-footer__link underline underline-offset-2"
-          href="https://www.metmuseum.org/fr"
+          href="https://www.metmuseum.org"
           target="_blank"
           rel="noreferrer"
         >

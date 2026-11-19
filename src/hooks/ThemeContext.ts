@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import type { ResolvedThemeMode, ThemeMode } from './themeModes';
+import type { ResolvedThemeMode, ThemeMode } from '@/domain/themeModes';
 
 export interface ThemeContextValue {
   /** What the visitor chose, which may be `system`. */

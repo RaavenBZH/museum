@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { ArtworkFactSection } from '@/components/discover/ArtworkFactSection';
 import { ChevronIcon } from '@/components/icons/ChevronIcon';
 import { Button, ButtonLink } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
-import type {
-  ArtworkFact,
-  ArtworkFactLink,
-  ArtworkFactSection as ArtworkFactSectionModel,
+import { UNKNOWN_ARTIST_LABEL } from '@/domain/artwork';
+import {
+  ESSENTIAL_FACTS_TITLE,
+  type ArtworkFact,
+  type ArtworkFactLink,
+  type ArtworkFactSection as ArtworkFactSectionModel,
 } from '@/domain/artworkFacts';
 import type { ArtworkTitleScale } from '@/domain/artworkTitleScale';
 
@@ -41,8 +43,6 @@ import type { ArtworkTitleScale } from '@/domain/artworkTitleScale';
  * go further. It leaves the application, so it says so in its accessible
  * name.
  */
-export const UNKNOWN_ARTIST_LABEL = 'Artist unrecorded';
-
 const ARTWORK_TITLE_CLASS: Record<ArtworkTitleScale, string> = {
   xl: 'artwork-cartel__title--xl text-artwork-title-xl',
   l: 'artwork-cartel__title--l text-artwork-title-l',
@@ -76,6 +76,9 @@ export function ArtworkCartel({
   className?: string;
 }) {
   const [isRecordOpen, setIsRecordOpen] = useState(false);
+  // Generated rather than written down, so two cartels on one screen never
+  // point their disclosure at the same record.
+  const recordId = useId();
 
   return (
     <section
@@ -96,7 +99,7 @@ export function ArtworkCartel({
       </div>
 
       {essentials.length === 0 ? null : (
-        <ArtworkFactSection section={{ title: 'The essentials', facts: [...essentials] }} />
+        <ArtworkFactSection section={{ title: ESSENTIAL_FACTS_TITLE, facts: [...essentials] }} />
       )}
 
       {artistSection === null ? null : <ArtworkFactSection section={artistSection} />}
@@ -107,7 +110,7 @@ export function ArtworkCartel({
             className="artwork-cartel__disclosure self-start"
             variant="secondary"
             aria-expanded={isRecordOpen}
-            aria-controls="artwork-cartel-record"
+            aria-controls={recordId}
             onClick={() => setIsRecordOpen((isOpen) => !isOpen)}
           >
             {isRecordOpen ? 'Hide the full record' : 'See the full record'}
@@ -116,7 +119,7 @@ export function ArtworkCartel({
 
           <div
             className={cn('artwork-cartel__record flex-col gap-8', isRecordOpen && 'flex')}
-            id="artwork-cartel-record"
+            id={recordId}
             hidden={!isRecordOpen}
           >
             {recordSections.map((section) => (

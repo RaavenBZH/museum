@@ -1,8 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
+import { UNKNOWN_ARTIST_LABEL } from '@/domain/artwork';
 import type { ArtworkFactSection } from '@/domain/artworkFacts';
-import { ArtworkCartel, UNKNOWN_ARTIST_LABEL } from './ArtworkCartel';
+import { ArtworkCartel } from './ArtworkCartel';
 
 const essentials = [
   { label: 'Medium', value: 'Oil on canvas' },
@@ -99,15 +100,14 @@ describe('ArtworkCartel', () => {
 
   it('folds the record back, and names what the button controls', async () => {
     const { container } = renderCartel();
-    const record = container.querySelector('#artwork-cartel-record');
+    const disclosure = screen.getByRole('button', { name: 'See the full record' });
+    const recordId = disclosure.getAttribute('aria-controls');
 
     // Named and present even while folded, which is what makes aria-controls
-    // and aria-expanded true statements.
-    expect(screen.getByRole('button', { name: 'See the full record' })).toHaveAttribute(
-      'aria-controls',
-      'artwork-cartel-record',
-    );
-    expect(record).toBeInTheDocument();
+    // and aria-expanded true statements. The name is generated, so what is
+    // asserted is that it points at the record and not at nothing.
+    expect(recordId).not.toBeNull();
+    expect(container.querySelector(`#${recordId}`)).toHaveClass('artwork-cartel__record');
 
     await userEvent.click(screen.getByRole('button', { name: 'See the full record' }));
     await userEvent.click(screen.getByRole('button', { name: 'Hide the full record' }));
@@ -162,7 +162,7 @@ describe('ArtworkCartel', () => {
     expect(link).toHaveAttribute('target', '_blank');
     expect(link).toHaveAttribute('rel', 'noreferrer');
     // Last thing in the record, and in none of its blocks.
-    expect(container.querySelector('#artwork-cartel-record')?.lastElementChild).toBe(link);
+    expect(container.querySelector('.artwork-cartel__record')?.lastElementChild).toBe(link);
     expect(container.querySelector('.artwork-fact-section')).not.toContainElement(link);
   });
 

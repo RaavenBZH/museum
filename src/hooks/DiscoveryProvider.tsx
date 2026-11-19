@@ -14,7 +14,7 @@ import { drawRandomArtwork } from './drawRandomArtwork';
  * Arriving on Discover therefore draws two artworks: the one revealed, and the
  * one waiting behind it.
  */
-export const ARTWORKS_HELD_AHEAD = 1;
+const ARTWORKS_HELD_AHEAD = 1;
 
 type DiscoveryState = {
   hasStarted: boolean;

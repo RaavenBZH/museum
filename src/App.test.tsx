@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './App';
-import { ThemeProvider } from '@/components/theme/ThemeProvider';
+import { ThemeProvider } from '@/hooks/ThemeProvider';
 import { DiscoveryProvider } from '@/hooks/DiscoveryProvider';
 import { drawRandomArtwork } from '@/hooks/drawRandomArtwork';
 import { buildArtwork } from '@/test/artworkFixture';

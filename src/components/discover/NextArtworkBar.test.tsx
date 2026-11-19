@@ -5,7 +5,7 @@ import { NextArtworkBar } from './NextArtworkBar';
 
 describe('NextArtworkBar', () => {
   it('promises the next artwork without naming it, under the artwork itself', () => {
-    render(<NextArtworkBar isLocked={false} secondsLeft={0} onNext={() => {}} />);
+    render(<NextArtworkBar isContemplating={false} secondsLeft={0} onNext={() => {}} />);
 
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('What next?');
     expect(screen.getByText('The next artwork stays a surprise.')).toBeInTheDocument();
@@ -16,7 +16,7 @@ describe('NextArtworkBar', () => {
   it('draws another artwork on demand, from its one action', async () => {
     const onNext = vi.fn();
 
-    render(<NextArtworkBar isLocked={false} secondsLeft={0} onNext={onNext} />);
+    render(<NextArtworkBar isContemplating={false} secondsLeft={0} onNext={onNext} />);
     await userEvent.click(screen.getByRole('button', { name: 'Discover another' }));
 
     expect(onNext).toHaveBeenCalledTimes(1);
@@ -26,7 +26,7 @@ describe('NextArtworkBar', () => {
   it('holds the action shut while the visitor is given a moment to look', async () => {
     const onNext = vi.fn();
 
-    render(<NextArtworkBar isLocked secondsLeft={3} onNext={onNext} />);
+    render(<NextArtworkBar isContemplating secondsLeft={3} onNext={onNext} />);
 
     const action = screen.getByRole('button', { name: 'Discover another' });
 
@@ -41,7 +41,7 @@ describe('NextArtworkBar', () => {
   });
 
   it('says how long is left, and ties that line to the action', () => {
-    render(<NextArtworkBar isLocked secondsLeft={2} onNext={() => {}} />);
+    render(<NextArtworkBar isContemplating secondsLeft={2} onNext={() => {}} />);
 
     const action = screen.getByRole('button', { name: 'Discover another' });
     const wait = screen.getByText('Take a moment with this one — 2 s');
@@ -50,7 +50,9 @@ describe('NextArtworkBar', () => {
   });
 
   it('says the next artwork is on its way, when it has to be waited for', () => {
-    render(<NextArtworkBar isLocked isAwaitingNext secondsLeft={0} onNext={() => {}} />);
+    render(
+      <NextArtworkBar isContemplating={false} isAwaitingNext secondsLeft={0} onNext={() => {}} />,
+    );
 
     expect(screen.getByText('Drawing the next artwork…')).toBeInTheDocument();
     expect(screen.queryByText(/Take a moment/)).not.toBeInTheDocument();
@@ -62,7 +64,7 @@ describe('NextArtworkBar', () => {
 
   it('is the inverted block of the design system', () => {
     const { container } = render(
-      <NextArtworkBar isLocked={false} secondsLeft={0} onNext={() => {}} />,
+      <NextArtworkBar isContemplating={false} secondsLeft={0} onNext={() => {}} />,
     );
 
     expect(container.querySelector('.next-artwork-bar')).toHaveClass(

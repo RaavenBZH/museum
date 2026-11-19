@@ -13,14 +13,18 @@ import { createResponseCache, type ResponseCache } from './responseCache';
  * - the HTTP status is checked **before** the body is read;
  * - the calls are spaced by a {@link RequestQueue}, to stay under the IP block;
  * - identical URLs are served from a {@link ResponseCache}, which also collapses
- *   two simultaneous calls for the same URL into one request.
+ *   two simultaneous calls for the same URL into one request;
+ * - a request whose every caller has given up is abandoned, signal and all.
  */
 export type GetJsonOptions = {
   /**
-   * Abandons the wait when the caller unmounts or changes parameters. The
-   * shared request itself is left running: another component may be waiting on
-   * the very same promise, and its answer still fills the cache, so the next
-   * mount is served without a call.
+   * Gives up this caller's wait when it unmounts or changes parameters, and
+   * drops the request itself once **every** caller waiting on it has gone:
+   * each URL in flight counts its waiters, so one component leaving never
+   * takes the answer away from another that is still waiting for it.
+   *
+   * A dropped request costs the museum nothing, which is the point — the
+   * budget that earns the IP block is spent by calls nobody is waiting for.
    */
   signal?: AbortSignal;
   /** Overrides the cache lifetime for this URL. */
@@ -41,10 +45,27 @@ function abortError(signal: AbortSignal): unknown {
   return signal.reason ?? new DOMException('The request was aborted.', 'AbortError');
 }
 
-/** Rejects as soon as `signal` aborts, without touching the shared request. */
-function raceAbort<T>(call: Promise<T>, signal: AbortSignal): Promise<T> {
+/**
+ * One caller's wait on a shared request, which several callers may share.
+ * The request is dropped when the last of them leaves, and not before.
+ */
+type InFlightRequest = {
+  controller: AbortController;
+  waiters: number;
+};
+
+const ABANDONED_REASON = 'Every caller gave up waiting for this request.';
+
+/**
+ * Rejects as soon as `signal` aborts, and tells the caller's departure to
+ * `onAbandon` so that the shared request can be dropped once nobody is left.
+ */
+function raceAbort<T>(call: Promise<T>, signal: AbortSignal, onAbandon?: () => void): Promise<T> {
   return new Promise<T>((resolve, reject) => {
-    const onAbort = () => reject(abortError(signal));
+    const onAbort = () => {
+      onAbandon?.();
+      reject(abortError(signal));
+    };
 
     signal.addEventListener('abort', onAbort, { once: true });
     call.then(resolve, reject).finally(() => signal.removeEventListener('abort', onAbort));
@@ -58,13 +79,23 @@ export function createMetMuseumClient(options: MetMuseumClientOptions = {}): Met
     cache = createResponseCache(),
   } = options;
 
-  async function performGet(url: string): Promise<unknown> {
+  const inFlight = new Map<string, InFlightRequest>();
+
+  async function performGet(url: string, signal: AbortSignal): Promise<unknown> {
+    // The queue may have held this call back long enough for every caller to
+    // leave. Checking here is what makes an abandoned draw cost nothing.
+    if (signal.aborted) {
+      throw abortError(signal);
+    }
+
     let response: Response;
 
     try {
-      response = await fetchImpl(url, { headers: { Accept: 'application/json' } });
+      response = await fetchImpl(url, { headers: { Accept: 'application/json' }, signal });
     } catch (cause) {
-      throw new MetMuseumNetworkError(url, cause);
+      // An abort reaches `fetch` as a rejection like any other; it is not a
+      // fault of the museum's and must not be reported as one.
+      throw signal.aborted ? abortError(signal) : new MetMuseumNetworkError(url, cause);
     }
 
     if (!response.ok) {
@@ -78,6 +109,43 @@ export function createMetMuseumClient(options: MetMuseumClientOptions = {}): Met
     }
   }
 
+  /** Starts one request for `url` and keeps its controller while it lasts. */
+  function startRequest(url: string): Promise<unknown> {
+    const controller = new AbortController();
+    const request: InFlightRequest = { controller, waiters: 0 };
+
+    inFlight.set(url, request);
+
+    return queue.schedule(() => performGet(url, controller.signal)).finally(() => {
+      // Identity, not the key: a retry after a failure has its own request.
+      if (inFlight.get(url) === request) {
+        inFlight.delete(url);
+      }
+    });
+  }
+
+  /**
+   * Drops a request nobody is waiting for any more, and only then.
+   *
+   * It drops it on the spot rather than at the end of the turn: the queue
+   * holds calls back by design, so a request abandoned before its turn comes
+   * is never sent at all. A component that unmounts and mounts again in the
+   * same turn — which is what React does in development — therefore sends one
+   * call and not two: the first is dropped unsent, and the second is a fresh
+   * request rather than the one being abandoned.
+   */
+  function dropIfAbandoned(url: string, request: InFlightRequest): void {
+    if (request.waiters > 0 || inFlight.get(url) !== request) {
+      return;
+    }
+
+    inFlight.delete(url);
+    // The pending call goes with it: the next caller must start a fresh
+    // request rather than join the one being abandoned.
+    cache.forget(url);
+    request.controller.abort(new DOMException(ABANDONED_REASON, 'AbortError'));
+  }
+
   return {
     getJson<T>(url: string, { signal, ttlMs }: GetJsonOptions = {}): Promise<T> {
       // A caller that has already given up must not spend a call.
@@ -85,9 +153,26 @@ export function createMetMuseumClient(options: MetMuseumClientOptions = {}): Met
         return Promise.reject(abortError(signal));
       }
 
-      const call = cache.load(url, () => queue.schedule(() => performGet(url)), ttlMs) as Promise<T>;
+      const call = cache.load(url, () => startRequest(url), ttlMs) as Promise<T>;
+      const request = inFlight.get(url);
 
-      return signal === undefined ? call : raceAbort(call, signal);
+      if (request === undefined) {
+        // Served from the cache: there is no request to wait on or to drop.
+        return signal === undefined ? call : raceAbort(call, signal);
+      }
+
+      request.waiters += 1;
+
+      if (signal === undefined) {
+        // A caller that cannot give up keeps the request alive for everyone.
+        return call;
+      }
+
+      return raceAbort(call, signal, () => {
+        request.waiters -= 1;
+
+        dropIfAbandoned(url, request);
+      });
     },
   };
 }

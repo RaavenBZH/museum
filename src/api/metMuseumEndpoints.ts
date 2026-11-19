@@ -7,15 +7,15 @@
  */
 const MET_COLLECTION_API_BASE_URL = 'https://collectionapi.metmuseum.org/public/collection/v1';
 
-/** The filters `GET /objects` accepts. Both are optional and combine. */
+/**
+ * The filter `GET /objects` accepts. The museum also reads a `metadataDate`,
+ * which is not built here because no screen asks for it: an endpoint this file
+ * cannot show in use is a parameter nobody maintains.
+ */
 export type ObjectIdsQuery = {
   /** Keep only the objects of these departments, as returned by `GET /departments`. */
   departmentIds?: number[];
-  /** Keep only the objects whose record changed on or after this `YYYY-MM-DD` date. */
-  metadataDate?: string;
 };
-
-const METADATA_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
  * `GET /objects` — the identifiers of the collection, as a single list.
@@ -24,7 +24,7 @@ const METADATA_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
  */
 export function objectIdsUrl(query: ObjectIdsQuery = {}): string {
   const url = new URL(`${MET_COLLECTION_API_BASE_URL}/objects`);
-  const { departmentIds, metadataDate } = query;
+  const { departmentIds } = query;
 
   if (departmentIds !== undefined) {
     if (departmentIds.length === 0) {
@@ -38,14 +38,6 @@ export function objectIdsUrl(query: ObjectIdsQuery = {}): string {
     // The museum reads this one parameter as a comma-separated list, and the
     // order of the identifiers decides the order of the answer, so it is kept.
     url.searchParams.set('departmentIds', departmentIds.join(','));
-  }
-
-  if (metadataDate !== undefined) {
-    if (!METADATA_DATE_PATTERN.test(metadataDate)) {
-      throw new RangeError('objectIdsUrl: metadataDate must be formatted as YYYY-MM-DD.');
-    }
-
-    url.searchParams.set('metadataDate', metadataDate);
   }
 
   return url.toString();

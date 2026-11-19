@@ -1,10 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { DatePill } from './DatePill';
+import { ArtworkYear } from './ArtworkYear';
 
-describe('DatePill', () => {
+describe('ArtworkYear', () => {
   it('keeps the year on one line', () => {
-    render(<DatePill>ca. 1831</DatePill>);
+    render(<ArtworkYear>ca. 1831</ArtworkYear>);
 
     expect(screen.getByText('ca. 1831')).toHaveClass('whitespace-nowrap');
   });

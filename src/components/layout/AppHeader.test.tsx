@@ -1,7 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
-import { ThemeProvider } from '@/components/theme/ThemeProvider';
 import { AppHeader } from './AppHeader';
 
 const navigation = [
@@ -10,16 +9,14 @@ const navigation = [
 ];
 
 /**
- * The bar reads the display mode and the address being shown, so it is only
- * ever rendered inside both providers, at a given address.
+ * The bar reads the address being shown from the router, so it is rendered at
+ * a given address. The display mode comes in as a prop: the bar owns no state.
  */
 function renderHeader(address = '/') {
   return render(
-    <ThemeProvider>
-      <MemoryRouter initialEntries={[address]}>
-        <AppHeader navigation={navigation} />
-      </MemoryRouter>
-    </ThemeProvider>,
+    <MemoryRouter initialEntries={[address]}>
+      <AppHeader navigation={navigation} themeMode="sand" onThemeModeChange={() => {}} />
+    </MemoryRouter>,
   );
 }
 

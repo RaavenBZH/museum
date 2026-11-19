@@ -8,7 +8,7 @@ describe('AppFooter', () => {
 
     expect(screen.getByRole('link', { name: 'Metropolitan Museum of Art' })).toHaveAttribute(
       'href',
-      'https://www.metmuseum.org/fr',
+      'https://www.metmuseum.org',
     );
     expect(screen.getByRole('link', { name: 'Collection API' })).toHaveAttribute(
       'href',

@@ -47,7 +47,13 @@ the shadcn/ui mapping lives in
 
 `--color-text-subtle` reaches 3.39:1 on a Sand surface, which clears WCAG 2.1 AA
 for large text but not for body text — hence the 24 px floor. Every other
-combination in use clears 4.5:1; the lowest is `accent` on `surface` at 4.97:1.
+combination carrying text clears 4.5:1; the lowest is `accent` on `surface` at
+4.97:1. `accent` on `--color-bg` reaches only 4.22:1 in Sand: it is a surface
+colour at that pairing and never carries text. The 40 px accent circle of the
+action tile sits on `--color-inverse-bg` at 3.40:1 in Sand and 2.40:1 in Cocoa;
+it is ornament, not a control — the tile is the link, its label is worded and
+the arrow inside is `aria-hidden` — so it is the one graphical object of the
+system exempt from the 3:1 of WCAG 1.4.11.
 
 An alternative accent may be adopted only as a complete pair, both modes at
 once: Ochre `#9A5B2D` / `#D9A066`, Olive `#6B6A35` / `#B4B878`, Slate `#4E5F78`
@@ -200,10 +206,10 @@ Built, with their tests beside them:
 
 | Component                  | File                                                                                       |
 | -------------------------- | ------------------------------------------------------------------------------------------ |
-| `BrandLogo`                | [`src/components/brand/BrandLogo.tsx`](../src/components/brand/BrandLogo.tsx)               |
+| `BrandLogo`, `BrandLogoLink` | [`src/components/brand/BrandLogo.tsx`](../src/components/brand/BrandLogo.tsx)             |
 | `Button`, `ButtonLink`, `ButtonRouterLink` | [`src/components/ui/Button.tsx`](../src/components/ui/Button.tsx)           |
 | `Badge`                    | [`src/components/ui/Badge.tsx`](../src/components/ui/Badge.tsx)                             |
-| `DatePill`                 | [`src/components/ui/DatePill.tsx`](../src/components/ui/DatePill.tsx)                       |
+| `ArtworkYear`              | [`src/components/ui/ArtworkYear.tsx`](../src/components/ui/ArtworkYear.tsx)                 |
 | `ThemeModeSwitch`          | [`src/components/theme/ThemeModeSwitch.tsx`](../src/components/theme/ThemeModeSwitch.tsx)   |
 | `AppHeader`, `AppFooter`   | [`src/components/layout/`](../src/components/layout/)                                       |
 | `MainNavigation`           | [`src/components/layout/MainNavigation.tsx`](../src/components/layout/MainNavigation.tsx)   |
@@ -212,6 +218,16 @@ Built, with their tests beside them:
 | `HeadlineBlock`, `ActionTile`, `ClosingBanner` | [`src/components/landing/`](../src/components/landing/)                 |
 | `ArtworkStage`, `ArtworkCartel`, `ArtworkFactSection`, `NextArtworkBar` | [`src/components/discover/`](../src/components/discover/) |
 | `NoticePanel`, `ErrorBoundary` | [`src/components/layout/`](../src/components/layout/)                                   |
+
+The mode itself is not a component: `ThemeProvider`, `ThemeContext` and
+`useTheme` live in [`src/hooks/`](../src/hooks/) and the modes themselves in
+[`src/domain/themeModes.ts`](../src/domain/themeModes.ts), because everything
+under `components/` is presentation without state. `ThemeModeSwitch` takes the
+mode on screen as a prop and hands the choice back as a call.
+
+The textures of the inverted blocks are listed in
+[`src/pages/homeTextures.ts`](../src/pages/homeTextures.ts), which is also
+where "never the same picture twice on one screen" is enforced.
 
 They are presentation components: they take props and nothing else, so they
 hold no state and know nothing of the collection API. The screens that compose
@@ -463,7 +479,7 @@ carries meaning:
 ### Navigation bar
 
 A `rounded-pill` container on `--color-surface` with 4 px padding and 4 px
-between links. Each link is at least 40 px tall with 16 px of horizontal
+between links. Each link is at least 44 px tall with 16 px of horizontal
 padding, in 14 px / 600 — every link carries the weight explicitly, the current
 one included, so the word neither grows nor moves its neighbours when the
 destination changes and the whole mark is carried by the pill. The current link takes `--color-inverse-bg`
@@ -480,15 +496,16 @@ top. The artwork column is **sticky 24 px from the top**, so the picture stays
 on screen while the record beside it is read; below 761 px the two become one
 column, the picture first.
 
-- **`ArtworkStage`**: a `--color-surface` card with 24 px of padding holding
+- **`ArtworkStage`**: a `--color-surface` card with 16 px of padding, 24 px
+  above 761 px, holding
   one `rounded-image` frame, centred. The frame carries the **real proportions
   of the object**, from its measured height and width, and is capped by a
   **620 px height budget** — the one raw length of this screen, beside the
   bento's two row heights. An object the museum has not measured keeps a 4:3
   frame rather than a size nobody knows. The panel takes the height of its
   frame: no fixed height, so a tall portrait cannot overflow it.
-- **`ArtworkCartel`**: one `--color-surface` card, 40 px of padding, 32 px
-  between its parts. The title takes the artwork-title scale; the author line
+- **`ArtworkCartel`**: one `--color-surface` card, 24 px of padding and 40 px
+  above 761 px, 32 px between its parts. The title takes the artwork-title scale; the author line
   is `text-lead`, the date in `--color-text-muted` beside it. Then the blocks,
   then one secondary button that folds the rest of the record away, then that
   record and, at its foot, the way out to metmuseum.org. The folded record
@@ -500,6 +517,15 @@ column, the picture first.
   `aria-hidden`. Under it, a description list whose **label column is 112 px**,
   a layout length like the bento rows, with 16 px to the value and 8 px above
   and below each row.
+- **`NextArtworkBar`**: the inverted band under the artwork — `rounded-card`
+  on `--color-inverse-bg`, 24 px of padding and 32 px above 761 px. An `h2` in
+  `text-tile-title`, one `text-lead` line in `--color-inverse-muted` that says
+  what is being waited for, and the `inverse` button labelled **Discover
+  another**. The button is held shut for **three seconds** after an artwork
+  appears, so that it is looked at rather than skipped, and while the next one
+  is still being drawn. It is held with `aria-disabled` and not `disabled`, so
+  it keeps its place in the tab order, and `aria-describedby` ties it to the
+  line that states the wait.
 - **Figures in the cartel are set in the sans face**, not in the monospace
   family that the rest of the system reserves for them. A dimension or a year
   sits here inside a prose list, beside a medium and a credit line; switched to
@@ -509,10 +535,18 @@ column, the picture first.
 
 ### Other components
 
+- **`NoticePanel`**: the one surface of a screen that has nothing else to show
+  — the first draw, a refusal from the collection, an unknown address, a screen
+  that threw. A `rounded-card` on `--color-surface` with 24 px of padding,
+  40 px above 761 px: an `h1` in `text-hero`, one `text-lead` line in
+  `--color-text-muted`, and one action slot. It is given `role="status"` while
+  something is awaited and `role="alert"` when something failed, so the reason
+  is announced and not only drawn.
 - **Badge**: a `--color-surface-muted` pill (padding 6 px 12 px 6 px 6 px,
   13 px / 500) containing an accent pill (3 px 8 px, 12 px), 8 px apart.
-- **Date**: `text-mono` on `--color-text-muted`, with no surface and no
-  padding of its own, identical on all four artwork formats. It wore a
+- **`ArtworkYear`**: the year of an artwork, `text-mono` on
+  `--color-text-muted`, with no surface and no padding of its own, identical on
+  all four artwork formats. It wore a
   `--color-surface-muted` pill on the two-column tiles until 2026-11-10; the
   surface was dropped because the same field then read as a label on the wide
   tiles and as plain text on the narrow ones, and a grid of cards cannot carry

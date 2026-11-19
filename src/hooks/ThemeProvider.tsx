@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ThemeContext, type ThemeContextValue } from './ThemeContext';
-import { isThemeMode, PREFERS_DARK_QUERY, THEME_STORAGE_KEY, type ThemeMode } from './themeModes';
+import {
+  isThemeMode,
+  PREFERS_DARK_QUERY,
+  THEME_STORAGE_KEY,
+  type ThemeMode,
+} from '@/domain/themeModes';
+import { ThemeContext, type ThemeContextValue } from '@/hooks/ThemeContext';
 
 function readStoredMode(): ThemeMode {
   try {
@@ -36,12 +41,26 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    const root = document.documentElement;
+    // <html> is outside React's tree, so what this effect writes there has to
+    // be undone by hand: an unmounted provider that left `data-theme` behind
+    // would pin a mode nobody chose on whatever mounts next.
+    const previousMode = root.getAttribute('data-theme');
+
     // No attribute means "follow the system", which the stylesheet handles.
     if (mode === 'system') {
-      document.documentElement.removeAttribute('data-theme');
+      root.removeAttribute('data-theme');
     } else {
-      document.documentElement.setAttribute('data-theme', mode);
+      root.setAttribute('data-theme', mode);
     }
+
+    return () => {
+      if (previousMode === null) {
+        root.removeAttribute('data-theme');
+      } else {
+        root.setAttribute('data-theme', previousMode);
+      }
+    };
   }, [mode]);
 
   const setMode = useCallback((nextMode: ThemeMode) => {

@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { Button } from '@/components/ui/Button';
 
 /**
@@ -28,35 +29,42 @@ import { Button } from '@/components/ui/Button';
  * without a wait.
  */
 export function NextArtworkBar({
-  isLocked,
+  isContemplating,
   isAwaitingNext = false,
   secondsLeft,
   onNext,
 }: {
   /** True while the visitor is being given a moment to look. */
-  isLocked: boolean;
+  isContemplating: boolean;
   /** True while the artwork they asked for is still being drawn. */
   isAwaitingNext?: boolean;
   /** Whole seconds left before the action opens. */
   secondsLeft: number;
   onNext: () => void;
 }) {
+  // The band holds its own action shut, and each reason to hold it is named
+  // once: the caller says what is happening, not what to do about it.
+  const isLocked = isContemplating || isAwaitingNext;
+  // Generated rather than written down: two bands on one screen would
+  // otherwise name the same heading and the same line.
+  const titleId = useId();
+  const waitId = useId();
   const waitLine = isAwaitingNext
     ? 'Drawing the next artwork…'
-    : isLocked
+    : isContemplating
       ? `Take a moment with this one — ${secondsLeft} s`
       : 'The next artwork stays a surprise.';
 
   return (
     <section
       className="next-artwork-bar flex flex-wrap items-center justify-between gap-6 rounded-card bg-inverse-bg p-6 text-inverse-text desktop:p-8"
-      aria-labelledby="next-artwork-title"
+      aria-labelledby={titleId}
     >
       <div className="next-artwork-bar__text flex min-w-0 flex-1 flex-col gap-2">
-        <h2 id="next-artwork-title" className="next-artwork-bar__title text-tile-title">
+        <h2 id={titleId} className="next-artwork-bar__title text-tile-title">
           What next?
         </h2>
-        <p id="next-artwork-wait" className="next-artwork-bar__lead text-lead text-inverse-muted">
+        <p id={waitId} className="next-artwork-bar__lead text-lead text-inverse-muted">
           {waitLine}
         </p>
       </div>
@@ -65,7 +73,7 @@ export function NextArtworkBar({
         variant="inverse"
         onClick={isLocked ? undefined : onNext}
         aria-disabled={isLocked}
-        aria-describedby="next-artwork-wait"
+        aria-describedby={waitId}
       >
         Discover another
       </Button>

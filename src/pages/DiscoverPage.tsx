@@ -51,10 +51,37 @@ import { useDiscovery } from '@/hooks/useDiscovery';
  * because it is about this screen's reading and not about the draw: leaving
  * Discover and coming back gives the artwork a fresh moment, which is right.
  */
+
+/**
+ * The band under the artwork, with the moment it owes the visitor.
+ *
+ * It is a component of its own for one reason: the countdown has to start
+ * over on every artwork, and the way React starts state over is by identity.
+ * The page gives it the artwork's id as its `key`, so each artwork gets a
+ * fresh band with a full moment, and the countdown never has to hold a copy
+ * of the artwork it belongs to.
+ */
+function NextArtworkSection({
+  isAwaitingNext,
+  onNext,
+}: {
+  isAwaitingNext: boolean;
+  onNext: () => void;
+}) {
+  const { isLocked, secondsLeft } = useArtworkContemplation();
+
+  return (
+    <NextArtworkBar
+      isContemplating={isLocked}
+      isAwaitingNext={isAwaitingNext}
+      secondsLeft={secondsLeft}
+      onNext={onNext}
+    />
+  );
+}
 export function DiscoverPage() {
   const { artwork, isDrawing, isAwaitingNext, nextImageUrl, error, start, next, retry } =
     useDiscovery();
-  const { isLocked, secondsLeft } = useArtworkContemplation(artwork?.id ?? null);
 
   // Arriving on the screen is what starts the run. Starting again is a no-op,
   // so coming back to Discover draws nothing.
@@ -101,12 +128,7 @@ export function DiscoverPage() {
           imageAlt={artworkImageDescription(artwork)}
           aspectRatio={artworkAspectRatio(artwork)}
         />
-        <NextArtworkBar
-          isLocked={isLocked || isAwaitingNext}
-          isAwaitingNext={isAwaitingNext}
-          secondsLeft={secondsLeft}
-          onNext={next}
-        />
+        <NextArtworkSection key={artwork.id} isAwaitingNext={isAwaitingNext} onNext={next} />
       </div>
 
       <ArtworkCartel

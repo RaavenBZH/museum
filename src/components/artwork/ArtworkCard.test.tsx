@@ -81,7 +81,7 @@ describe('ArtworkCard', () => {
     });
     const shapes = everyFormat.map((format) => {
       rerender(<ArtworkCard {...greatWave} format={format} />);
-      return container.querySelector('.date-pill')?.className;
+      return container.querySelector('.artwork-year')?.className;
     });
 
     expect(new Set(shapes).size).toBe(1);
