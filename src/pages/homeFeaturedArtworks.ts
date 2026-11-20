@@ -1,31 +1,30 @@
 import type { ArtworkCardProps } from '@/components/artwork/ArtworkCard';
-import { UNKNOWN_ARTIST_LABEL } from '@/domain/artwork';
+import { discoverArtworkPath } from '@/domain/discoveryRoute';
 
 /**
  * The seven artworks of the home page.
  *
- * They are a **fixed editorial selection**, not a result from the collection
- * API: the home page is the door of the product and must always open on the
- * same, deliberately composed grid, whatever the API answers. Discovery mode
- * is where the collection is drawn at random.
+ * They are a **fixed editorial selection**: the home page is the door of the
+ * product and must always open on the same, deliberately composed grid,
+ * whatever the API answers — and opening it costs no call to the museum.
+ * Discovery mode is where the collection is drawn at random.
  *
- * Every field is the API's own value for that object id — `title`,
- * `artistDisplayName`, `objectDate`, `primaryImageSmall` — so nothing here is
- * invented, and each tile links to the detail view of its real object. The
- * seven are all public domain, which is why their pictures can be shown.
+ * Each one is a real object of the API, picked in the collection Discover
+ * draws from, European Paintings, so every tile opens its own record on
+ * Discover at `/discover/<id>`. Every field is the API's own value for that
+ * object — `title`, `artistDisplayName`, `objectDate`, `primaryImageSmall` —
+ * read on 2026-11-20, so nothing here is invented. All seven are in the
+ * public domain, which is why the API serves their pictures: the museum
+ * withholds the picture of a work still under copyright.
  *
- * Two gaps of the API are visible in the list and handled rather than hidden:
- * the Babylonian lion panel has no artist, and the rule for the year is the
- * one the domain layer will follow — `objectDate` when it reads as a date,
- * `objectBeginDate` when it is missing or is a sentence.
- *
- * The order is the order of the grid, and it spans twenty-six centuries, so
- * the date reads from `ca. 604–562 BCE` to 1889.
+ * The format of each tile follows the shape of the painting it holds, and the
+ * order is the order of the grid; it spans three centuries, from Bruegel's
+ * 1565 to Van Gogh's 1889.
  */
 const artwork = (
   objectId: number,
   artwork: Omit<ArtworkCardProps, 'href'>,
-): ArtworkCardProps => ({ ...artwork, href: `/artworks/${objectId}` });
+): ArtworkCardProps => ({ ...artwork, href: discoverArtworkPath(objectId) });
 
 export const HOME_FEATURED_ARTWORKS: readonly ArtworkCardProps[] = [
   artwork(436105, {
@@ -35,40 +34,40 @@ export const HOME_FEATURED_ARTWORKS: readonly ArtworkCardProps[] = [
     year: '1787',
     imageUrl: 'https://images.metmuseum.org/CRDImages/ep/web-large/DP-13139-001.jpg',
   }),
-  artwork(11145, {
+  artwork(435809, {
     format: 'small',
-    title: 'The Veteran in a New Field',
-    artist: 'Winslow Homer',
-    year: '1865',
-    imageUrl: 'https://images.metmuseum.org/CRDImages/ad/web-large/DP102298.jpg',
+    title: 'The Harvesters',
+    artist: 'Pieter Bruegel the Elder',
+    year: '1565',
+    imageUrl: 'https://images.metmuseum.org/CRDImages/ep/web-large/DP119115.jpg',
   }),
-  artwork(199708, {
+  artwork(437873, {
     format: 'portrait',
-    title: 'Seasons and Elements (Air)',
-    artist: 'Charles Le Brun',
-    year: 'ca. 1683',
-    imageUrl: 'https://images.metmuseum.org/CRDImages/es/web-large/DT814.jpg',
+    title: 'Philip IV (1605–1665), King of Spain',
+    artist: 'Velázquez (Diego Rodríguez de Silva y Velázquez)',
+    year: 'probably 1624',
+    imageUrl: 'https://images.metmuseum.org/CRDImages/ep/web-large/DP239023.jpg',
   }),
-  artwork(322585, {
+  artwork(436965, {
     format: 'panoramic',
-    title: 'Panel with striding lion',
-    artist: UNKNOWN_ARTIST_LABEL,
-    year: 'ca. 604–562 BCE',
-    imageUrl: 'https://images.metmuseum.org/CRDImages/an/web-large/DT891.jpg',
+    title: 'The Monet Family in Their Garden at Argenteuil',
+    artist: 'Edouard Manet',
+    year: '1874',
+    imageUrl: 'https://images.metmuseum.org/CRDImages/ep/web-large/DP-25465-001.jpg',
   }),
   artwork(436532, {
     format: 'portrait',
-    title: 'Self-Portrait with a Straw Hat',
+    title: 'Self-Portrait with a Straw Hat (obverse: The Potato Peeler)',
     artist: 'Vincent van Gogh',
     year: '1887',
     imageUrl: 'https://images.metmuseum.org/CRDImages/ep/web-large/DT1502_cropped2.jpg',
   }),
-  artwork(39799, {
+  artwork(436535, {
     format: 'small',
-    title: 'Under the Wave off Kanagawa',
-    artist: 'Katsushika Hokusai',
-    year: 'ca. 1830–32',
-    imageUrl: 'https://images.metmuseum.org/CRDImages/as/web-large/DP141042.jpg',
+    title: 'Wheat Field with Cypresses',
+    artist: 'Vincent van Gogh',
+    year: '1889',
+    imageUrl: 'https://images.metmuseum.org/CRDImages/ep/web-large/DP-42549-001.jpg',
   }),
   artwork(435826, {
     format: 'small',

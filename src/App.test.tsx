@@ -44,6 +44,9 @@ async function settleDraws() {
 beforeEach(() => {
   // What has been seen outlives a test in storage; every test starts afresh.
   localStorage.clear();
+  // Reset first: a draw a test did not use would otherwise be handed to the
+  // next test as its first one.
+  drawMock.mockReset();
   drawMock.mockResolvedValueOnce(starryNight).mockResolvedValueOnce(sunflowers);
   openMock.mockReset();
   openMock.mockResolvedValue(irises);
@@ -100,6 +103,23 @@ describe('App', () => {
     // The run starts behind it, so the next artwork is ready when asked for;
     // the drawn one waits its turn rather than taking the screen.
     expect(drawMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('opens an artwork of the home page on Discover, never on the "not found" screen', async () => {
+    const wheatField = buildArtwork({ id: 436535, title: 'Wheat Field with Cypresses' });
+
+    openMock.mockResolvedValue(wheatField);
+    renderApp('/');
+
+    await userEvent.click(
+      screen.getByRole('link', { name: 'Wheat Field with Cypresses, Vincent van Gogh, 1889' }),
+    );
+    await settleDraws();
+
+    expect(openMock).toHaveBeenCalledWith(436535, expect.anything());
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+      'Wheat Field with Cypresses',
+    );
   });
 
   it('opens an artwork of My Gallery on Discover when it is clicked', async () => {

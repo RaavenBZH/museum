@@ -250,19 +250,16 @@ are read one after another, at the reader's own pace. My Gallery is where what
 has been discovered is kept and counted.
 
 A timed mode was drawn and dropped: it is not being built, and nothing in this
-system refers to it any more. My Gallery is in the bar because the home already
-offers it, and its screen does not exist yet: until it does, that address is
-served by the "not found" screen, which says so rather than failing silently.
+system refers to it any more.
 
 The first of those screens is the home page,
 [`src/pages/HomePage.tsx`](../src/pages/HomePage.tsx): the bar, the bento grid
 and the closing band. Its seven artworks are a fixed editorial selection
-([`homeFeaturedArtworks.ts`](../src/pages/homeFeaturedArtworks.ts)), not an API
-result — the door of the product opens on the same composed grid every time,
-and the collection is drawn at random in Discovery mode instead. Each tile
-links to `/artworks/<objectID>`, the detail view of a real object — a screen
-that is not built yet either, so those tiles reach the "not found" screen for
-now.
+([`homeFeaturedArtworks.ts`](../src/pages/homeFeaturedArtworks.ts)) of real
+objects from European Paintings, the collection Discover draws from — the door
+of the product opens on the same composed grid every time, at no call to the
+museum, and the collection is drawn at random in Discovery mode instead. Each
+tile opens its own record on Discover, at `/discover/<objectID>`.
 
 ### Buttons
 

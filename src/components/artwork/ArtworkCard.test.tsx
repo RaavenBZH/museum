@@ -9,7 +9,7 @@ const greatWave: ArtworkCardProps = {
   artist: 'Katsushika Hokusai',
   year: 'ca. 1830-32',
   imageUrl: 'https://images.metmuseum.org/great-wave.jpg',
-  href: '/artworks/36491',
+  href: '/discover/436535',
 };
 
 const everyFormat: readonly ArtworkCardFormat[] = ['wide', 'panoramic', 'portrait', 'small'];
@@ -22,7 +22,7 @@ describe('ArtworkCard', () => {
       name: 'Under the Wave off Kanagawa, Katsushika Hokusai, ca. 1830-32',
     });
 
-    expect(link).toHaveAttribute('href', '/artworks/36491');
+    expect(link).toHaveAttribute('href', '/discover/436535');
   });
 
   it('describes the picture as artist, title and year', () => {

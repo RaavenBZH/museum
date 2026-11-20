@@ -31,10 +31,18 @@ describe('HomePage', () => {
     }
   });
 
-  it('points every artwork at a real object of the collection', () => {
+  it('opens every artwork on Discover, at the address of its record', () => {
     for (const artwork of HOME_FEATURED_ARTWORKS) {
-      expect(artwork.href).toMatch(/^\/artworks\/\d+$/);
+      // `/artworks/<id>` once led nowhere: the record of an artwork lives at
+      // `/discover/<id>`, which the router serves.
+      expect(artwork.href).toMatch(/^\/discover\/\d+$/);
     }
+  });
+
+  it('features seven different artworks', () => {
+    const addresses = HOME_FEATURED_ARTWORKS.map((artwork) => artwork.href);
+
+    expect(new Set(addresses).size).toBe(7);
   });
 
   it('offers the modes instead of repeating the screen it is showing', () => {
