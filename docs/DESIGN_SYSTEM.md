@@ -60,6 +60,7 @@ once: Ochre `#9A5B2D` / `#D9A066`, Olive `#6B6A35` / `#B4B878`, Slate `#4E5F78`
 / `#93AFCF`. A light accent from one pair never goes with a dark accent from
 another.
 
+
 ### Modes
 
 `data-theme` on `<html>` is authoritative: `sand` or `cocoa` pins a mode, and
@@ -85,6 +86,7 @@ carrying size, line height, tracking and weight together.
 | -------------------- | ------- | ------ | --------------- | ----------- | ---------- | ---------------------------------- |
 | `text-display`       | 72 px   | 44 px  | 600             | 0.95        | -0.05 em   | closing banner headline            |
 | `text-hero`          | 68 px   | 44 px  | 600             | 0.95        | -0.045 em  | page headline (`h1`)               |
+| `text-headline`      | 44 px   | 30 px  | 600             | 0.95        | -0.045 em  | My Gallery headline, ring figure   |
 | `text-tile-title`    | 30 px   | 30 px  | 600             | 1           | -0.04 em   | label of the action tile           |
 | `text-logo`          | 20 px   | 20 px  | 700             | 1           | -0.04 em   | logotype                           |
 | `text-lead`          | 18 px   | 18 px  | 400             | 1.5         | 0          | introductory paragraph             |
@@ -160,7 +162,7 @@ breakpoint, above 760 px.
 
 Inline SVG at the stroke, `viewBox="0 0 24 24"`, `fill="none"`,
 `stroke="currentColor"`, `stroke-width="2"`, round caps and joins,
-`aria-hidden="true"` whenever a label is present. The system has exactly five:
+`aria-hidden="true"` whenever a label is present. The system has exactly seven:
 
 | Icon           | Path                          | Use                              |
 | -------------- | ----------------------------- | -------------------------------- |
@@ -169,16 +171,20 @@ Inline SVG at the stroke, `viewBox="0 0 24 24"`, `fill="none"`,
 | Sun            | `r="4"` circle + eight rays   | mode switch, 18 px inside 44 px  |
 | Crescent       | `M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z` | mode switch, 18 px inside 44 px |
 | Chevron        | `M6 9l6 6 6-6` down, `M18 15l-6-6-6 6` up | disclosure button, 18 px         |
+| Grid           | four 7 × 7 squares            | layout switch, 18 px             |
+| List           | three ruled lines and their bullets | layout switch, 18 px       |
 
 No other icon library, no filled icon, no emoji. They are coded as
 [`ArrowRightIcon`](../src/components/icons/ArrowRightIcon.tsx),
 [`ArrowUpRightIcon`](../src/components/icons/ArrowUpRightIcon.tsx),
 [`SunIcon`](../src/components/icons/SunIcon.tsx),
-[`MoonIcon`](../src/components/icons/MoonIcon.tsx) and
-[`ChevronIcon`](../src/components/icons/ChevronIcon.tsx), all five decorative:
+[`MoonIcon`](../src/components/icons/MoonIcon.tsx),
+[`ChevronIcon`](../src/components/icons/ChevronIcon.tsx),
+[`GridIcon`](../src/components/icons/GridIcon.tsx) and
+[`ListIcon`](../src/components/icons/ListIcon.tsx), all seven decorative:
 the control they sit in always carries its own label. The two arrows slide 2 px
-the way they point on hover, under a `motion-safe` guard; the sun, the crescent
-and the chevron never move — what is behind or beside them is what tells the
+the way they point on hover, under a `motion-safe` guard; the sun, the crescent,
+the chevron, the grid and the list never move — what is behind or beside them is what tells the
 state. The chevron points down on what is folded and up on what is open, so it
 states the state rather than the action, and `aria-expanded` says it again.
 
@@ -218,6 +224,9 @@ Built, with their tests beside them:
 | `HeadlineBlock`, `ActionTile`, `ClosingBanner` | [`src/components/landing/`](../src/components/landing/)                 |
 | `ArtworkStage`, `ArtworkCartel`, `ArtworkFactSection`, `NextArtworkBar` | [`src/components/discover/`](../src/components/discover/) |
 | `NoticePanel`, `ErrorBoundary` | [`src/components/layout/`](../src/components/layout/)                                   |
+| `CompletionDonutChart`     | [`src/components/statistics/CompletionDonutChart.tsx`](../src/components/statistics/CompletionDonutChart.tsx) |
+| `GalleryLayoutSwitch`, `GalleryCollectionGroup`, `SeenArtworkGrid`, `SeenArtworkList`, `SeenArtworkPicture` | [`src/components/gallery/`](../src/components/gallery/) |
+| `ChartContainer`, `ChartTooltip` (vendored from shadcn/ui) | [`src/components/ui/chart.tsx`](../src/components/ui/chart.tsx) |
 
 The mode itself is not a component: `ThemeProvider`, `ThemeContext` and
 `useTheme` live in [`src/hooks/`](../src/hooks/) and the modes themselves in
@@ -532,6 +541,54 @@ column, the picture first.
   `text-mono` it would also drop from 15 px to 12 px and the rows would stop
   lining up. The monospace family keeps the figures that stand alone — the
   proportions under a frame, a counter.
+
+### My Gallery
+
+[`src/pages/GalleryPage.tsx`](../src/pages/GalleryPage.tsx) follows the My
+Gallery mockup: the progress card, the layout switch, then the artworks seen.
+
+- **The progress card**: one `rounded-card` on `--color-surface` across the
+  full width, a single low row — 24 px of padding, 40 px across on desktop —
+  holding the ring, two short lines and the way back to Discover on the right.
+  Below 761 px the three wrap under one another.
+- **`CompletionDonutChart`**: the shadcn/ui donut-with-text, in the mockup's
+  shape at a smaller size: a **160 px** square and an 18 px ring. The track is
+  a whole circle in `--color-surface-muted` and the share of the collection
+  seen an accent arc over it, from the top and clockwise, with rounded ends.
+  In the middle, as HTML laid over the chart, the share in `text-headline` and
+  under it "N left" in `text-caption-title` `--color-text-muted`. The ring is
+  one `role="img"` named by the sentence it draws.
+- **The two lines**: the `h1` in `text-headline` says how many artworks have
+  been seen, one `text-lead` line in `--color-text-muted` says out of what —
+  the one fact a chart must state about its sample. The ring already gives the
+  share, so the text does not repeat it.
+- **`GalleryLayoutSwitch`**: Grid or List, the pill group of the mode switch —
+  `--color-surface`, 4 px of padding, the side in use in the inverted pill and
+  `aria-pressed`, each side 44 px tall with its icon and its word in
+  `text-caption-short`. It sits on the right, 44 px under the card and 40 px
+  above the collection, and the gallery reopens on the side last chosen.
+- **`GalleryCollectionGroup`**: the collection's name in `text-tile-title`, one
+  line on what it holds in `text-caption-title` at 400, and the count in
+  `text-mono` on the right; 20 px down to the artworks, 56 px under them.
+- **`SeenArtworkGrid`**: columns of at least 240 px, as many as fit, 32 px
+  between rows and 24 px between columns; two columns below 761 px, 24 px and
+  12 px apart. Each picture keeps the artwork's proportions in a `rounded-image`
+  frame, under it the title in `text-caption-title`, the artist and date in
+  `text-caption-meta`, the size in `text-mono`.
+- **`SeenArtworkList`**: one `rounded-card` on `--color-surface` with 8 px of
+  padding, one row per artwork — a 72 px square thumbnail, the title over the
+  artist and date, where it is kept, and its size in `text-mono`; below 761 px
+  the row keeps a 56 px thumbnail and the title.
+- **Every card and every row is a link** to the artwork on Discover, at
+  `/discover/<id>`: the whole figure or row is the target, named by title,
+  artist and date, with the system's focus outline, and the picture's hover
+  zoom of the artwork card.
+- **`SeenArtworkPicture`**: a picture is only fetched once its card comes
+  within about one row of the screen. Until then its frame is drawn empty at
+  its final size, so nothing moves when it arrives.
+
+The mockup also draws a filter for the artworks a visitor has liked and a heart
+on each one; neither is built, since nothing records a like yet.
 
 ### Other components
 
