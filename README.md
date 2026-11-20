@@ -159,10 +159,12 @@ browser 1,512 px wide.
   - **By century**: the artworks seen, by the century they were painted in.
     Each bar's tooltip adds how many works the collection holds from that
     century, counted with one `v1.1/search` query per century.
-  - **By medium**: what the artworks seen are made of, the most frequent first.
+  - **By medium**: a pie of what the artworks seen are made of, the four most
+    frequent mediums and the rest, each named and counted in the legend.
 
-  Folded, the section asks the museum for nothing: the eight counts are only
-  requested when it is opened, then kept for a day.
+  The eight counts take a few seconds at the museum, so they are requested as
+  soon as My Gallery opens and are ready when the section unfolds; they are
+  then kept in the browser for a day, and the chart appears at once.
 - **Grid or list, and the choice is remembered.** The grid shows each picture
   at its real proportions. The list adds where each work is kept. A pointer
   over a row highlights it.
@@ -191,6 +193,13 @@ browser 1,512 px wide.
 
 ## Quick start
 
+Clone the repository and move into it:
+
+```bash
+git clone https://github.com/RaavenBZH/museum-challenge.git
+cd museum-challenge
+```
+
 ### With Docker
 
 The only requirement is Docker with the Compose plugin. One command starts the
@@ -203,18 +212,22 @@ docker compose up
 Then open <http://localhost:5173>. Edits to the sources are picked up live
 through hot module replacement.
 
-If another project on your machine already holds port 5173, copy `.env.example`
-to `.env` and change `MUSEUM_WEB_PORT`.
+If another project on your machine already holds port 5173 or 8080, copy
+`.env.example` to `.env` and change `MUSEUM_WEB_PORT` or
+`MUSEUM_PRODUCTION_PORT`.
 
 Two further services are available behind Compose profiles:
 
 ```bash
-docker compose run --rm checks              # lint, type-check and test in a container
-docker compose --profile production up      # production build served by nginx on :8080
+docker compose run --rm checks                         # lint, type-check and test in a container
+docker compose --profile production up production      # production build served by nginx
 ```
 
-The production image builds the application and serves `dist/` with nginx, which
-falls back to `index.html` so that any client-side route can be opened directly.
+The production image builds the application and serves `dist/` with nginx on
+<http://localhost:8080>, falling back to `index.html` so that any client-side
+route can be opened directly. Naming the `production` service matters:
+`docker compose --profile production up` alone would also start the
+development server, which has no profile.
 
 Compose mounts only the source directories, not the whole tree, so the
 `node_modules` installed inside the image is never shadowed by a volume that
@@ -306,6 +319,7 @@ pnpm test:watch  # run the tests in watch mode while developing
     │   ├── discoveryCollection.ts    # department 11, the collection Discover draws from
     │   ├── discoveryProgress.ts      # how much of it has been seen, and its figures
     │   ├── discoveryRoute.ts         # /discover/<id>, the address an artwork opens at
+    │   ├── galleryLayout.ts          # grid or list, the two layouts of My Gallery
     │   ├── galleryInsights.ts        # centuries and mediums of the artworks seen
     │   ├── seenArtwork.ts            # what My Gallery keeps of an artwork once seen
     │   └── themeModes.ts             # the Sand / Cocoa modes and their storage key
@@ -316,7 +330,9 @@ pnpm test:watch  # run the tests in watch mode while developing
     │   ├── drawRandomArtwork.ts      # one draw, skipping the objects with no picture
     │   ├── fetchDiscoveryArtwork.ts  # one named artwork of the collection, opened on Discover
     │   ├── useArtworkContemplation.ts # the three seconds an artwork is given
+    │   ├── browserStorage.ts         # the one guarded read and write of localStorage
     │   ├── seenArtworksStorage.ts    # keeps the artworks seen in the browser
+    │   ├── useGalleryLayout.ts       # the layout last chosen, kept in the browser
     │   ├── useDiscoveryCollectionSize.ts # how many artworks Discover can draw from
     │   ├── useCollectionCenturies.ts # the collection counted by century, on demand
     │   ├── ThemeProvider.tsx         # resolves the mode, writes data-theme, persists it
@@ -326,7 +342,9 @@ pnpm test:watch  # run the tests in watch mode while developing
     │   ├── HomePage.tsx              # the bento landing page
     │   ├── DiscoverPage.tsx          # one artwork at a time, with its record; /discover/<id> too
     │   ├── GalleryPage.tsx           # My Gallery: progress ring, then every artwork seen
-    │   └── NotFoundPage.tsx          # unknown address, with the way home
+    │   ├── NotFoundPage.tsx          # unknown address, with the way home
+    │   ├── homeFeaturedArtworks.ts   # the seven European Paintings of the home page
+    │   └── homeTextures.ts           # the two veiled pictures behind the inverted blocks
     ├── components                    # presentation only: props in, nothing else
     │   ├── brand                     # the logotype, and the logotype as a link home
     │   ├── layout                    # header, navigation, footer, bento, notice, boundary
@@ -339,7 +357,8 @@ pnpm test:watch  # run the tests in watch mode while developing
     │   ├── icons                     # the seven icons of the system
     │   └── ui                        # button, badge, artwork year, shadcn/ui chart
     ├── lib
-    │   └── utils.ts                  # re-exports the cn() class-name helper
+    │   ├── utils.ts                  # cn(): merges class names, knowing the system's type scale
+    │   └── isRecord.ts               # the first check of anything read from outside
     └── test
         ├── artworkFixture.ts         # the artwork the tests are written against
         ├── intersectionObserverStub.ts # brings an element into view by hand
@@ -351,11 +370,26 @@ rather than a chain of relative segments. It is declared once in
 `tsconfig.json` and once in `vite.config.ts`, so the compiler, the bundler and
 the test runner all resolve it.
 
-The four layers only ever depend downwards — `pages/` reads `hooks/`, which
-reads `domain/`, which reads `api/` — and `components/` sits outside that
-chain: it takes props and nothing else, which is why the display mode and the
-discovery run are read in `App.tsx` and handed down rather than reached for
-from inside a component.
+The layers only ever depend downwards: `pages/` reads `hooks/`, `hooks/` read
+`api/` and `domain/`, and `domain/` is pure — no React, no `fetch`, only the
+types of `api/`. `components/` sits beside that chain rather than in it: a
+component never reads a context and never calls the museum. It may use a pure
+function of `domain/`, such as the wording of a missing artist or the address
+of an artwork, and two of them keep state that belongs to the screen alone — a
+folded record, a picture not yet near the viewport. The display mode is read
+in `App.tsx` and handed down as props.
+
+How the data travels, for one artwork on Discover:
+
+1. `DiscoveryProvider` (`hooks/`) asks `drawRandomArtwork` for an artwork.
+2. `fetchObjectIds` and `fetchObject` (`api/`) build the URLs, and
+   `metMuseumClient` serves them from the response cache or sends them through
+   the request queue, checking the status before reading the body.
+3. `toArtwork` (`domain/`) turns the payload into the model, deciding what
+   every empty or misleading field means.
+4. The provider puts the artwork on screen, keeps the fields My Gallery shows
+   in the browser, and `DiscoverPage` hands the model to the presentation
+   components, which draw it.
 
 ### AI-assisted Design system
 
@@ -375,24 +409,23 @@ reaches a colour, a type style or a radius.
   optional fields, and static types force every absent value to be handled at the
   call site. TypeScript is pinned to 6.0.3, the latest release supported by
   `typescript-eslint`.
-- **shadcn/ui** on the Radix UI base for the component layer, on top of
-  **Tailwind CSS** through the official Vite plugin. shadcn/ui was chosen because
-  it is a component library that also provides the chart component, so the
-  interface and the visualisations come from one system with one theme instead of
-  two unrelated dependencies. shadcn/ui is not a
-  runtime dependency that ships a design system: its CLI copies each component's
-  source into `src/components/ui`, so only the components actually used exist in
-  the repository and they can be edited like any other file here. That directory
-  appears with the first component that needs it, rather than being created empty
-  in advance. Structural containers also carry an explicit semantic class name
-  alongside the utility classes, so that the rendered DOM stays readable.
-  `src/styles/shadcn-tokens.css` maps shadcn/ui's own variable names onto the
-  design system tokens, so every component copied in lands inside the palette in
-  both modes without its source being touched.
-- **Charts** come from the shadcn/ui `Chart` component, which wraps Recharts and
-  reads the same theme variables (`--chart-1` to `--chart-5`) as the rest of the
-  interface; each of those five is an existing design system token, so a chart
-  follows the current mode and introduces no colour of its own. Recharts is
+- **Tailwind CSS** through the official Vite plugin, with **shadcn/ui** for the
+  charts. shadcn/ui is not a runtime dependency: its CLI copies a component's
+  source into the repository, where it is edited like any other file. One
+  component came from it, the chart primitives in `src/components/ui/chart.tsx`,
+  trimmed to what the charts use and brought into the design system. The
+  button, the badge and the other interface components are written by hand
+  against the design system's tokens. `src/styles/shadcn-tokens.css` maps
+  shadcn/ui's variable names onto those tokens, so anything copied in lands
+  inside the palette in both modes. Structural containers carry an explicit
+  semantic class name beside the utility classes, so that the rendered DOM
+  stays readable.
+- **`cn`** to merge class names, configured with the design system's type
+  scale so that a `text-caption-meta` and a `text-text-muted` on one element
+  are not mistaken for two colours, one of which would be dropped.
+- **Charts** are drawn with Recharts inside the shadcn/ui chart primitives,
+  their marks filled with design system tokens, so a chart follows the current
+  mode and introduces no colour of its own. Recharts is
   the heaviest dependency in the project — measured at 104 kB gzipped against the
   108 kB of everything else — so the screen that draws the chart is loaded with
   `React.lazy`: the first screen never waits for it, and the shell fetches it in
@@ -496,8 +529,8 @@ invisible.
   `IntersectionObserver` with a 240 px margin, with the browser's own lazy
   loading on top. Until then its frame is drawn empty at its final size, so
   nothing moves when the picture arrives.
-- **The gallery itself costs no call.** It keeps the seven fields its cards
-  show, not the museum's thirty-field records. Every artwork ever seen fits in
+- **The gallery itself costs no call.** It keeps the nine fields its cards and
+  charts use, not the museum's thirty-field records. Every artwork ever seen fits in
   the browser's storage, and the gallery opens without asking the museum
   anything.
 
@@ -507,9 +540,9 @@ invisible.
   `React.lazy`, prefetched in the background once the first screen is idle.
 - **Early connections.** `index.html` preconnects to the API and the image
   server.
-- **Browser storage.** The artworks seen, the collection size, the gallery
-  layout and the colour mode are kept in `localStorage`, so the gallery and
-  its ring appear at once. A blocked storage only loses the convenience.
+- **Browser storage.** The artworks seen, the collection size and its counts
+  by century, the gallery layout and the colour mode are kept in
+  `localStorage`, so the gallery, its ring and its charts appear at once. A blocked storage only loses the convenience.
 - **No call at start-up.** The first draw happens on arriving at Discover.
 
 ## AI usage
@@ -531,6 +564,9 @@ listed, including the parts of this README.
 | Collection API layer | Wrote the four layers that read the museum — URL builder, error types, request queue, response cache with in-flight sharing and abort, and the two object endpoints — with their tests, after measuring that the real limit is an IP block around 140 calls rather than the documented 80 requests per second | **Decided** to read `GET /objects` and chain `GET /objects/{objectID}` behind it so a detail call is only ever made with a valid identifier; reviewed the caching and the spacing |
 | Discover screen | Implemented the screen from my own design canvas: the run held above the router, one artwork shown and one held ahead, the random draw that skips the 15 % of objects the museum has never photographed, the artwork-title scale, the three-second pause on the action, and the tests | **Decided** the concept and the layout, drew both artboards, reported the two cases where no image appeared, and asked for the artwork to survive leaving the screen and coming back |
 | My Gallery | Kept every artwork Discover reveals in the browser's storage, wrote the completion ring with the shadcn/ui donut-with-text, the grid and list views, the pictures loaded only as they come into view, the opening of a seen artwork on Discover at `/discover/<id>`, the folded "More about my gallery" section with its century and medium charts, and their tests, to the measures of my mockup; two agents worked in parallel on the last changes, one on the card and one on the opening | **Decided** that the gallery keeps every artwork seen, that the ring shows the share of European Paintings seen, and that it loads lazily; sent two earlier versions — a chart of the museum by department — back because they did not follow the mockup |
+| Home page, shell and navigation | Wrote the bento home page, the artwork card, the navigation bar, the footer, the day / night switch, the router with its not-found page and error boundary, and their tests | **Decided** the landing layout from my mockup and asked for a router so that the discovery run survives moving between screens |
+| Tests | Wrote the unit, component and hook tests of every feature — about 400 tests in 74 files — and reproduced each bug it fixed with a test that fails without the fix | Asked for tests on every change, and ran the application to report the cases they did not catch |
+| Commits | Proposed the split of the work into commits and their messages | Validated every message before the commit was made |
 | Code review | Reviews each component it writes against the two references it must follow — `docs/DESIGN_SYSTEM.md` and the React practices document — and reports every raw colour, off-scale spacing, accessibility slip and rule violation, so that files written at different moments stay harmonised | Asked for that review to run on every interface change before a commit; decided which findings to apply |
 
 Three guidance documents used while building the project are kept outside the
@@ -544,8 +580,14 @@ because everything in this repository is in English. `docs/DESIGN_SYSTEM.md` is
 the English reference the tool derived from it, limited to what the project
 actually uses.
 
-TypeScript and Tailwind CSS were the tool's recommendations, which I accepted;
-every other technical decision in the table above was mine.
+The commits are signed with my name and carry no co-author line, by choice:
+this table is the declaration, and it covers every commit of the repository,
+all of which were produced with Claude Code's assistance.
+
+TypeScript, Tailwind CSS, the `cn` class-name helper, the spacing and the
+deadline of the calls to the museum, the cache lifetimes and European
+Paintings as the collection Discover draws from were the tool's proposals,
+which I accepted. The decisions marked as mine in the table above were mine.
 
 ## Testing
 
@@ -555,5 +597,17 @@ Component and unit tests run with Vitest in a simulated DOM:
 pnpm test
 ```
 
-Tests live next to the code they cover, named `*.test.tsx`, and query the
-rendered output by role and accessible name rather than by internal structure.
+Tests live next to the code they cover, named `*.test.ts` or `*.test.tsx`, and
+query the rendered output by role and accessible name wherever a role exists.
+They cover every layer: the URL builders, the client, its queue and its cache
+(including the races between callers who leave and come back), the domain
+mappers and figures, the hooks and their storage, every component, every
+page and the shell's routes. The museum is never called: every test runs
+against fixtures or a simulated client. There is no end-to-end test in a real
+browser yet.
+
+They also run in a container, with the linter and the type-checker:
+
+```bash
+docker compose run --rm checks
+```
