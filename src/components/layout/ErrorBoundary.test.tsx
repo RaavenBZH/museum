@@ -48,4 +48,39 @@ describe('ErrorBoundary', () => {
       '/',
     );
   });
+
+  it('gives the next screen its chance once the address changes', () => {
+    const { rerender } = render(
+      <ErrorBoundary resetKey="/discover">
+        <Failing />
+      </ErrorBoundary>,
+    );
+
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+
+    rerender(
+      <ErrorBoundary resetKey="/gallery">
+        <p>My Gallery</p>
+      </ErrorBoundary>,
+    );
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getByText('My Gallery')).toBeInTheDocument();
+  });
+
+  it('keeps the failure while the address stays the same', () => {
+    const { rerender } = render(
+      <ErrorBoundary resetKey="/discover">
+        <Failing />
+      </ErrorBoundary>,
+    );
+
+    rerender(
+      <ErrorBoundary resetKey="/discover">
+        <p>The artwork</p>
+      </ErrorBoundary>,
+    );
+
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+  });
 });

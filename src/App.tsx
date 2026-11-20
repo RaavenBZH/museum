@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react';
-import { Route, Routes } from 'react-router';
+import { Route, Routes, useLocation } from 'react-router';
 import { AppFooter } from '@/components/layout/AppFooter';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { ErrorBoundary } from '@/components/layout/ErrorBoundary';
@@ -67,6 +67,7 @@ const MAIN_NAVIGATION: readonly MainNavigationItem[] = [
  */
 export function App() {
   const { resolvedMode, setMode } = useTheme();
+  const { pathname } = useLocation();
 
   // The gallery's chunk is split off so that the first screen never waits for
   // it — but nothing makes the visitor wait for it later either: once the
@@ -98,7 +99,7 @@ export function App() {
       />
 
       <main className="app-shell__main flex flex-1 flex-col py-6">
-        <ErrorBoundary>
+        <ErrorBoundary resetKey={pathname}>
           <Suspense
             fallback={
               <NoticePanel

@@ -18,16 +18,34 @@ import { ButtonLink } from '@/components/ui/Button';
  *
  * The way out is a real page load and not a router link: the tree that failed
  * is the one still mounted, so the visitor needs a fresh one.
+ *
+ * Moving to another screen clears the failure too. The boundary sits under
+ * the bar, whose links stay usable while a screen is broken; without a reset,
+ * every one of them would land on this same panel, since the boundary would
+ * still hold its failure. `resetKey` is the address, and a new address gives
+ * the new screen its chance — it fails on its own account, or not at all.
  */
 type ErrorBoundaryState = {
   hasFailed: boolean;
 };
 
-export class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryState> {
+type ErrorBoundaryProps = {
+  children: ReactNode;
+  /** Changing it clears a failure: the shell passes the current address. */
+  resetKey?: string;
+};
+
+export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   state: ErrorBoundaryState = { hasFailed: false };
 
   static getDerivedStateFromError(): ErrorBoundaryState {
     return { hasFailed: true };
+  }
+
+  componentDidUpdate(previous: ErrorBoundaryProps) {
+    if (this.state.hasFailed && previous.resetKey !== this.props.resetKey) {
+      this.setState({ hasFailed: false });
+    }
   }
 
   render() {
