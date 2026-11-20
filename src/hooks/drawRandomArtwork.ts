@@ -1,7 +1,8 @@
-import { fetchObject, fetchObjectIds } from '@/api/metMuseumObjects';
-import { toArtwork, type Artwork } from '@/domain/artwork';
+import { fetchObjectIds } from '@/api/metMuseumObjects';
+import type { Artwork } from '@/domain/artwork';
 import { drawArtworkId } from '@/domain/artworkDraw';
 import { DISCOVERY_COLLECTION } from '@/domain/discoveryCollection';
+import { fetchDiscoveryArtwork } from './fetchDiscoveryArtwork';
 
 /**
  * One random artwork of the discovery collection, in two calls that are both
@@ -60,11 +61,11 @@ export async function drawRandomArtwork({
       return null;
     }
 
-    const artwork = toArtwork(
-      await fetchObject(drawnId, { signal, within: DISCOVERY_COLLECTION }),
-    );
+    // The same reader an opening uses: it answers `null` for a work the
+    // museum serves no picture for.
+    const artwork = await fetchDiscoveryArtwork(drawnId, { signal });
 
-    if (artwork.imageUrl !== null) {
+    if (artwork !== null) {
       return artwork;
     }
 

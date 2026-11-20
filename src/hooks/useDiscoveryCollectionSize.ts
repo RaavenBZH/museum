@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { fetchObjectIds } from '@/api/metMuseumObjects';
 import { describeCollectionError } from '@/domain/collectionError';
 import { DISCOVERY_COLLECTION } from '@/domain/discoveryCollection';
+import { readStorage, writeStorage } from '@/hooks/browserStorage';
 
 /** Where the last known size is kept, so the gallery can state it at once. */
 export const COLLECTION_SIZE_STORAGE_KEY = 'museum:discovery-collection-size';
@@ -13,21 +14,9 @@ type CollectionSizeState = {
 };
 
 function readStoredSize(): number | null {
-  try {
-    const stored = Number(localStorage.getItem(COLLECTION_SIZE_STORAGE_KEY));
+  const stored = Number(readStorage(COLLECTION_SIZE_STORAGE_KEY));
 
-    return Number.isSafeInteger(stored) && stored > 0 ? stored : null;
-  } catch {
-    return null;
-  }
-}
-
-function storeSize(collectionSize: number): void {
-  try {
-    localStorage.setItem(COLLECTION_SIZE_STORAGE_KEY, String(collectionSize));
-  } catch {
-    // Storage can be blocked; the size is simply read again next time.
-  }
+  return Number.isSafeInteger(stored) && stored > 0 ? stored : null;
 }
 
 /**
@@ -58,7 +47,7 @@ export function useDiscoveryCollectionSize(): CollectionSizeState & { retry: () 
     fetchObjectIds(DISCOVERY_COLLECTION, { signal })
       .then(({ total }) => {
         if (!signal.aborted) {
-          storeSize(total);
+          writeStorage(COLLECTION_SIZE_STORAGE_KEY, String(total));
           setState({ collectionSize: total, error: null });
         }
       })
@@ -77,9 +66,9 @@ export function useDiscoveryCollectionSize(): CollectionSizeState & { retry: () 
     return () => controller.abort();
   }, [attempt]);
 
-  const retry = useCallback(() => {
+  const retry = () => {
     setAttempt((current) => current + 1);
-  }, []);
+  };
 
   return { ...state, retry };
 }

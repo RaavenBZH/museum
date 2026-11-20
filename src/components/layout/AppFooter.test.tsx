@@ -6,11 +6,11 @@ describe('AppFooter', () => {
   it('credits the museum and the API, each one linked where it is named', () => {
     render(<AppFooter />);
 
-    expect(screen.getByRole('link', { name: 'Metropolitan Museum of Art' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Metropolitan Museum of Art (opens in a new tab)' })).toHaveAttribute(
       'href',
       'https://www.metmuseum.org',
     );
-    expect(screen.getByRole('link', { name: 'Collection API' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Collection API (opens in a new tab)' })).toHaveAttribute(
       'href',
       'https://metmuseum.github.io',
     );

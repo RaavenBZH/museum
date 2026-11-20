@@ -1,7 +1,7 @@
 import { useId, type ReactNode } from 'react';
 import { ChevronIcon } from '@/components/icons/ChevronIcon';
 import { CenturyComparisonChart } from '@/components/statistics/CenturyComparisonChart';
-import { MediumBreakdownChart } from '@/components/statistics/MediumBreakdownChart';
+import { MediumPieChart } from '@/components/statistics/MediumPieChart';
 import { Button } from '@/components/ui/Button';
 import type { CenturyCount, MediumCount } from '@/domain/galleryInsights';
 import { cn } from '@/lib/utils';
@@ -11,10 +11,9 @@ import { cn } from '@/lib/utils';
  * charts that each answer one question about the artworks seen.
  *
  * It is folded by default because the ring above already answers the first
- * question a visitor has, and because the century chart costs eight calls to
- * the museum: folded, the section asks for nothing. The page owns whether it
- * is open — opening it is what starts the count — so this component holds no
- * state of its own.
+ * question a visitor has. The page owns whether it is open, and has the
+ * counts it shows asked for ahead of time, so this component holds no state
+ * of its own and the chart is there the moment it unfolds.
  *
  * The folded part stays in the page under `hidden`, so `aria-expanded` and
  * `aria-controls` describe an element that exists, as on the wall label.
@@ -116,7 +115,7 @@ export function GalleryInsights({
               Nothing to count yet.
             </p>
           ) : (
-            <MediumBreakdownChart rows={mediums} />
+            <MediumPieChart rows={mediums} />
           )}
         </InsightCard>
       </div>

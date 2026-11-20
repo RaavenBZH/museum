@@ -1,22 +1,18 @@
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import {
   DEFAULT_GALLERY_LAYOUT,
   isGalleryLayout,
   type GalleryLayout,
 } from '@/domain/galleryLayout';
+import { readStorage, writeStorage } from '@/hooks/browserStorage';
 
 /** Where the visitor's choice of layout is kept, beside the artworks seen. */
 export const GALLERY_LAYOUT_STORAGE_KEY = 'museum:gallery-layout';
 
 function readStoredLayout(): GalleryLayout {
-  try {
-    const stored = localStorage.getItem(GALLERY_LAYOUT_STORAGE_KEY);
+  const stored = readStorage(GALLERY_LAYOUT_STORAGE_KEY);
 
-    return isGalleryLayout(stored) ? stored : DEFAULT_GALLERY_LAYOUT;
-  } catch {
-    // Storage can be unavailable (private browsing, blocked site data).
-    return DEFAULT_GALLERY_LAYOUT;
-  }
+  return isGalleryLayout(stored) ? stored : DEFAULT_GALLERY_LAYOUT;
 }
 
 /**
@@ -31,15 +27,10 @@ function readStoredLayout(): GalleryLayout {
 export function useGalleryLayout(): [GalleryLayout, (layout: GalleryLayout) => void] {
   const [layout, setStoredLayout] = useState<GalleryLayout>(readStoredLayout);
 
-  const setLayout = useCallback((nextLayout: GalleryLayout) => {
+  const setLayout = (nextLayout: GalleryLayout) => {
     setStoredLayout(nextLayout);
-
-    try {
-      localStorage.setItem(GALLERY_LAYOUT_STORAGE_KEY, nextLayout);
-    } catch {
-      // The layout still applies on this screen even if it cannot be saved.
-    }
-  }, []);
+    writeStorage(GALLERY_LAYOUT_STORAGE_KEY, nextLayout);
+  };
 
   return [layout, setLayout];
 }

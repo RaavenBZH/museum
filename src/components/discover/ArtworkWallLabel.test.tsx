@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { UNKNOWN_ARTIST_LABEL } from '@/domain/artwork';
 import type { ArtworkFactSection } from '@/domain/artworkFacts';
-import { ArtworkCartel } from './ArtworkCartel';
+import { ArtworkWallLabel } from './ArtworkWallLabel';
 
 const essentials = [
   { label: 'Medium', value: 'Oil on canvas' },
@@ -25,9 +25,9 @@ const museumLink = {
   href: 'https://www.metmuseum.org/art/collection/search/437984',
 };
 
-function renderCartel(overrides: Partial<Parameters<typeof ArtworkCartel>[0]> = {}) {
+function renderWallLabel(overrides: Partial<Parameters<typeof ArtworkWallLabel>[0]> = {}) {
   return render(
-    <ArtworkCartel
+    <ArtworkWallLabel
       title="Wheat Field with Cypresses"
       titleScale="l"
       artistName="Vincent van Gogh"
@@ -41,20 +41,20 @@ function renderCartel(overrides: Partial<Parameters<typeof ArtworkCartel>[0]> = 
   );
 }
 
-describe('ArtworkCartel', () => {
+describe('ArtworkWallLabel', () => {
   it('sets the title at the step it is given, so a long one does not take the card', () => {
-    const { container } = renderCartel({ titleScale: 's' });
+    const { container } = renderWallLabel({ titleScale: 's' });
 
-    expect(container.querySelector('.artwork-cartel__title')).toHaveClass(
+    expect(container.querySelector('.artwork-wall-label__title')).toHaveClass(
       'text-artwork-title-s',
     );
-    expect(container.querySelector('.artwork-cartel__title')).not.toHaveClass(
+    expect(container.querySelector('.artwork-wall-label__title')).not.toHaveClass(
       'text-artwork-title-xl',
     );
   });
 
   it('opens on the artwork, its author and its date', () => {
-    renderCartel();
+    renderWallLabel();
 
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
       'Wheat Field with Cypresses',
@@ -64,13 +64,13 @@ describe('ArtworkCartel', () => {
   });
 
   it('says in words that the artist is unrecorded, rather than leaving a blank', () => {
-    renderCartel({ artistName: null, displayDate: null });
+    renderWallLabel({ artistName: null, displayDate: null });
 
     expect(screen.getByText(UNKNOWN_ARTIST_LABEL)).toBeInTheDocument();
   });
 
   it('shows the essentials and the artist without being asked', () => {
-    renderCartel();
+    renderWallLabel();
 
     expect(screen.getByRole('heading', { level: 2, name: 'The essentials' })).toBeInTheDocument();
     expect(screen.getByText('Oil on canvas')).toBeInTheDocument();
@@ -79,7 +79,7 @@ describe('ArtworkCartel', () => {
   });
 
   it('keeps the rest of the record folded until it is asked for', async () => {
-    renderCartel();
+    renderWallLabel();
 
     const disclosure = screen.getByRole('button', { name: 'See the full record' });
 
@@ -99,7 +99,7 @@ describe('ArtworkCartel', () => {
   });
 
   it('folds the record back, and names what the button controls', async () => {
-    const { container } = renderCartel();
+    const { container } = renderWallLabel();
     const disclosure = screen.getByRole('button', { name: 'See the full record' });
     const recordId = disclosure.getAttribute('aria-controls');
 
@@ -107,7 +107,7 @@ describe('ArtworkCartel', () => {
     // and aria-expanded true statements. The name is generated, so what is
     // asserted is that it points at the record and not at nothing.
     expect(recordId).not.toBeNull();
-    expect(container.querySelector(`#${recordId}`)).toHaveClass('artwork-cartel__record');
+    expect(container.querySelector(`#${recordId}`)).toHaveClass('artwork-wall-label__record');
 
     await userEvent.click(screen.getByRole('button', { name: 'See the full record' }));
     await userEvent.click(screen.getByRole('button', { name: 'Hide the full record' }));
@@ -116,7 +116,7 @@ describe('ArtworkCartel', () => {
   });
 
   it('is one button form, the secondary one of the system', () => {
-    renderCartel();
+    renderWallLabel();
 
     const disclosure = screen.getByRole('button', { name: 'See the full record' });
 
@@ -124,7 +124,7 @@ describe('ArtworkCartel', () => {
   });
 
   it('sets the folded blocks under the blocks that are always shown', async () => {
-    renderCartel();
+    renderWallLabel();
     await userEvent.click(screen.getByRole('button', { name: 'See the full record' }));
 
     expect(screen.getByRole('heading', { level: 3, name: 'The artwork' })).toBeInTheDocument();
@@ -132,20 +132,20 @@ describe('ArtworkCartel', () => {
   });
 
   it('offers nothing to unfold when the museum has nothing more to say', () => {
-    renderCartel({ recordSections: [], artistSection: null, museumLink: null });
+    renderWallLabel({ recordSections: [], artistSection: null, museumLink: null });
 
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'The artist' })).not.toBeInTheDocument();
   });
 
   it('still offers the way out when the link is all the museum has left to give', () => {
-    renderCartel({ recordSections: [], artistSection: null });
+    renderWallLabel({ recordSections: [], artistSection: null });
 
     expect(screen.getByRole('button', { name: 'See the full record' })).toBeInTheDocument();
   });
 
   it('closes the folded record with the way out to the museum, outside every block', async () => {
-    const { container } = renderCartel();
+    const { container } = renderWallLabel();
 
     // Hidden with the rest of the record, so it is not offered at all until
     // the visitor asks for it.
@@ -162,12 +162,12 @@ describe('ArtworkCartel', () => {
     expect(link).toHaveAttribute('target', '_blank');
     expect(link).toHaveAttribute('rel', 'noreferrer');
     // Last thing in the record, and in none of its blocks.
-    expect(container.querySelector('.artwork-cartel__record')?.lastElementChild).toBe(link);
+    expect(container.querySelector('.artwork-wall-label__record')?.lastElementChild).toBe(link);
     expect(container.querySelector('.artwork-fact-section')).not.toContainElement(link);
   });
 
   it('shows no way out when the museum names no page for the object', () => {
-    renderCartel({ museumLink: null });
+    renderWallLabel({ museumLink: null });
 
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });

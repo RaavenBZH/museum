@@ -1,6 +1,7 @@
 import { metMuseumClient, type MetMuseumClient } from './metMuseumClient';
 import { MetMuseumNotFoundError, MetMuseumPayloadError } from './metMuseumErrors';
 import { objectIdsUrl, objectUrl, type ObjectIdsQuery } from './metMuseumEndpoints';
+import { isRecord } from '@/lib/isRecord';
 
 /**
  * The two services of the `objects` resource, chained: the identifier list is
@@ -41,10 +42,6 @@ export type ObjectRequestOptions = {
 export const OBJECT_IDS_CACHE_TTL_MS = 60 * 60 * 1000;
 /** Six hours: a published object's fields are stable for a browsing session. */
 export const OBJECT_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 /**
  * The identifier lists are long — 371 365 entries for the whole collection —
@@ -117,9 +114,9 @@ export async function fetchObjectIds(
  * block. The check costs nothing once the list is cached, which it is as soon
  * as a view has asked for one.
  *
- * This is also the call that is repeated the most — the grid, the detail view
- * and the chart sample all ask for the same identifiers — so it is the one the
- * response cache exists for.
+ * This is also the call that is repeated the most — a draw, an opening and a
+ * rejected work drawn again all ask for objects already read — so it is the
+ * one the response cache exists for.
  */
 export async function fetchObject(
   objectID: number,

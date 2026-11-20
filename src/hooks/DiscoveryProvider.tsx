@@ -381,6 +381,11 @@ export function DiscoveryProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  // Only the picture of the first artwork held is offered, so the context
+  // depends on that and not on the whole list: refilling the buffer behind
+  // it changes nothing a screen reads.
+  const nextImageUrl = ahead[0]?.imageUrl ?? null;
+
   // Memoised, or every consumer of the context would re-render on every render
   // of this provider.
   const discovery = useMemo<DiscoveryContextValue>(
@@ -389,7 +394,7 @@ export function DiscoveryProvider({ children }: { children: ReactNode }) {
       artwork,
       isDrawing: hasStarted && artwork === null && openingId === null && error === null,
       isAwaitingNext: isAwaitingNext && error === null,
-      nextImageUrl: ahead[0]?.imageUrl ?? null,
+      nextImageUrl,
       seen,
       error,
       openFailure,
@@ -401,7 +406,7 @@ export function DiscoveryProvider({ children }: { children: ReactNode }) {
     [
       hasStarted,
       artwork,
-      ahead,
+      nextImageUrl,
       seen,
       isAwaitingNext,
       error,

@@ -18,7 +18,7 @@ import type { MetObjectResource } from '@/api/metMuseumObjects';
 /**
  * What stands in for an artist the museum has not recorded. It is wording
  * about a missing field of the model, so it is held with the model: the
- * cartel and the landing page would otherwise word the same absence twice.
+ * wall label and the landing page would otherwise word the same absence twice.
  */
 export const UNKNOWN_ARTIST_LABEL = 'Artist unrecorded';
 

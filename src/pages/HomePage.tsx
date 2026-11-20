@@ -29,7 +29,7 @@ export function HomePage() {
           firstLine="Discover art."
           secondLine="The way you want."
           lead="Discover the Metropolitan Museum of Art collection one artwork at a time, and build a gallery of everything you have seen."
-          badge={<Badge highlight="In progress">My Gallery</Badge>}
+          badge={<Badge highlight="New">My Gallery</Badge>}
           actions={
             <>
               <ButtonRouterLink variant="primary" to="/discover">

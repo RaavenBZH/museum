@@ -1,6 +1,7 @@
 import { metMuseumClient, type MetMuseumClient } from './metMuseumClient';
 import { departmentPeriodSearchUrl, type YearSpan } from './metMuseumEndpoints';
 import { MetMuseumPayloadError } from './metMuseumErrors';
+import { isRecord } from '@/lib/isRecord';
 
 /**
  * Twenty-four hours: how the museum dates its collection changes over years,
@@ -29,14 +30,9 @@ export async function fetchDepartmentPeriodCount(
   const { signal, client = metMuseumClient } = options;
   const url = departmentPeriodSearchUrl(departmentId, span);
   const payload = await client.getJson<unknown>(url, { signal, ttlMs: PERIOD_COUNT_CACHE_TTL_MS });
-  const total =
-    typeof payload === 'object' && payload !== null && !Array.isArray(payload)
-      ? (payload as { total?: unknown }).total
-      : undefined;
-
-  if (typeof total !== 'number') {
+  if (!isRecord(payload) || typeof payload.total !== 'number') {
     throw new MetMuseumPayloadError(url, 'no numeric "total" field');
   }
 
-  return total;
+  return payload.total;
 }

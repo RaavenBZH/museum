@@ -172,18 +172,26 @@ describe('GalleryPage', () => {
     expect(screen.getByRole('button', { name: 'List' })).toHaveAttribute('aria-pressed', 'true');
   });
 
-  it('asks for the counts by century only once the section is unfolded', async () => {
+  it('has the counts by century asked for on arrival, ready for the section', async () => {
     const user = userEvent.setup();
     const centuriesMock = vi.mocked(useCollectionCenturies);
 
     renderPage();
 
-    expect(centuriesMock).toHaveBeenLastCalledWith(false);
+    // Asked for before anything is unfolded: the chart is ready when it is.
+    expect(centuriesMock).toHaveBeenCalled();
 
     await user.click(screen.getByRole('button', { name: 'More about my gallery' }));
 
-    expect(centuriesMock).toHaveBeenLastCalledWith(true);
     expect(screen.getByRole('heading', { name: 'By medium' })).toBeInTheDocument();
+  });
+
+  it('offers one way to start, and nothing to lay out, while the gallery is empty', () => {
+    renderPage({ seen: [] });
+
+    expect(screen.queryByRole('group', { name: 'Layout' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Continue discovering' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'Discover' })).toHaveLength(1);
   });
 
   it('invites a visitor who has seen nothing to start', () => {

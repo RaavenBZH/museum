@@ -1,16 +1,38 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MetMuseumRateLimitError } from '@/api/metMuseumErrors';
 import { fetchDepartmentPeriodCount } from '@/api/metMuseumSearch';
-import { useCollectionCenturies } from './useCollectionCenturies';
+import {
+  COLLECTION_CENTURIES_MAX_AGE_MS,
+  COLLECTION_CENTURIES_STORAGE_KEY,
+  useCollectionCenturies,
+} from './useCollectionCenturies';
 
 vi.mock('@/api/metMuseumSearch', () => ({ fetchDepartmentPeriodCount: vi.fn() }));
 
 const countMock = vi.mocked(fetchDepartmentPeriodCount);
 
-function CenturiesProbe({ enabled }: { enabled: boolean }) {
-  const { counts, error, retry } = useCollectionCenturies(enabled);
+const KEPT_COUNTS = {
+  1200: 6,
+  1300: 60,
+  1400: 202,
+  1500: 286,
+  1600: 472,
+  1700: 425,
+  1800: 950,
+  1900: 61,
+};
+
+function keepCounts(countedAt: number) {
+  localStorage.setItem(
+    COLLECTION_CENTURIES_STORAGE_KEY,
+    JSON.stringify({ counts: KEPT_COUNTS, countedAt }),
+  );
+}
+
+function CenturiesProbe() {
+  const { counts, error, retry } = useCollectionCenturies();
 
   return (
     <div>
@@ -26,20 +48,18 @@ function CenturiesProbe({ enabled }: { enabled: boolean }) {
 describe('useCollectionCenturies', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
     countMock.mockImplementation(async (_departmentId, span) =>
       span.beginYear === 1800 ? 960 : 10,
     );
   });
 
-  it('asks the museum nothing while the section is folded', () => {
-    render(<CenturiesProbe enabled={false} />);
-
-    expect(countMock).not.toHaveBeenCalled();
-    expect(screen.getByText('1800s: unknown')).toBeInTheDocument();
+  afterEach(() => {
+    localStorage.clear();
   });
 
-  it('counts the discovery collection century by century once unfolded', async () => {
-    render(<CenturiesProbe enabled />);
+  it('counts the discovery collection century by century as soon as it mounts', async () => {
+    render(<CenturiesProbe />);
 
     expect(await screen.findByText('1800s: 960')).toBeInTheDocument();
     expect(countMock).toHaveBeenCalledTimes(8);
@@ -50,11 +70,53 @@ describe('useCollectionCenturies', () => {
     );
   });
 
-  it('reports a refusal in one sentence, and counts again on demand', async () => {
+  it('keeps the counts for the next visit', async () => {
+    render(<CenturiesProbe />);
+
+    await screen.findByText('1800s: 960');
+
+    const kept = JSON.parse(localStorage.getItem(COLLECTION_CENTURIES_STORAGE_KEY) ?? '{}');
+
+    expect(kept.counts[1800]).toBe(960);
+    expect(typeof kept.countedAt).toBe('number');
+  });
+
+  it('shows counts kept within the day at once, and asks the museum nothing', () => {
+    keepCounts(Date.now() - 60 * 1000);
+
+    render(<CenturiesProbe />);
+
+    expect(screen.getByText('1800s: 950')).toBeInTheDocument();
+    expect(countMock).not.toHaveBeenCalled();
+  });
+
+  it('shows older counts at once, and counts again behind them', async () => {
+    keepCounts(Date.now() - COLLECTION_CENTURIES_MAX_AGE_MS - 1);
+
+    render(<CenturiesProbe />);
+
+    expect(screen.getByText('1800s: 950')).toBeInTheDocument();
+    expect(await screen.findByText('1800s: 960')).toBeInTheDocument();
+  });
+
+  it('keeps older counts on screen rather than an error, when the museum refuses', async () => {
+    keepCounts(Date.now() - COLLECTION_CENTURIES_MAX_AGE_MS - 1);
+    countMock.mockRejectedValue(new MetMuseumRateLimitError('any-url'));
+
+    render(<CenturiesProbe />);
+
+    // Let the refusal land.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(screen.getByText('1800s: 950')).toBeInTheDocument();
+    expect(screen.getByText('error: none')).toBeInTheDocument();
+  });
+
+  it('reports a refusal when it has nothing to show, and counts again on demand', async () => {
     const user = userEvent.setup();
 
     countMock.mockRejectedValueOnce(new MetMuseumRateLimitError('any-url'));
-    render(<CenturiesProbe enabled />);
+    render(<CenturiesProbe />);
 
     expect(await screen.findByText(/error: The museum is refusing calls/)).toBeInTheDocument();
 
@@ -63,12 +125,22 @@ describe('useCollectionCenturies', () => {
     expect(await screen.findByText('1800s: 960')).toBeInTheDocument();
   });
 
-  it('abandons the count when the section is folded again before it lands', () => {
+  it('ignores kept counts that do not have the right shape', () => {
+    localStorage.setItem(COLLECTION_CENTURIES_STORAGE_KEY, JSON.stringify({ counts: { 1800: 'x' } }));
     countMock.mockReturnValue(new Promise(() => {}));
-    const { rerender } = render(<CenturiesProbe enabled />);
+
+    render(<CenturiesProbe />);
+
+    expect(screen.getByText('1800s: unknown')).toBeInTheDocument();
+    expect(countMock).toHaveBeenCalled();
+  });
+
+  it('abandons the count when the screen goes away before it lands', () => {
+    countMock.mockReturnValue(new Promise(() => {}));
+    const { unmount } = render(<CenturiesProbe />);
     const signal = countMock.mock.calls[0][2]?.signal;
 
-    rerender(<CenturiesProbe enabled={false} />);
+    unmount();
 
     expect(signal?.aborted).toBe(true);
   });

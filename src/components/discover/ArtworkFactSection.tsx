@@ -8,18 +8,18 @@ const ARTWORK_FACT_ROW =
   'artwork-fact-section__row grid grid-cols-[7rem_minmax(0,1fr)] items-baseline gap-4 py-2';
 
 /**
- * One titled block of the cartel: a heading, then the fields as a description
+ * One titled block of the wall label: a heading, then the fields as a description
  * list — each label names the field, each value is the museum's own.
  *
  * The same block draws the essentials, the artist and every part of the
  * folded record, because they differ only by their rows. The accent dot of the
- * heading marks a block of the cartel the way the artboard marks it.
+ * heading marks a block of the wall label the way the artboard marks it.
  *
  * The labels are prose set in the sans face at the quietest size of the scale:
  * the monospace family is reserved for figures, and a field name is not one.
  *
  * It holds rows and nothing else. The way out to the museum's page is not a
- * field of any one block, so it does not live here: the cartel sets it at the
+ * field of any one block, so it does not live here: the wall label sets it at the
  * foot of the card, under every block.
  *
  * The label column is a layout length rather than a spacing step, like the
@@ -31,7 +31,7 @@ export function ArtworkFactSection({
   headingLevel = 2,
 }: {
   section: ArtworkFactSectionModel;
-  /** 2 in the cartel; 3 inside the folded record, which sits under one. */
+  /** 2 in the wall label; 3 inside the folded record, which sits under one. */
   headingLevel?: 2 | 3;
 }) {
   const Heading = headingLevel === 2 ? 'h2' : 'h3';

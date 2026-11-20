@@ -1,4 +1,5 @@
 import type { Artwork } from '@/domain/artwork';
+import { isRecord } from '@/lib/isRecord';
 
 /**
  * What My Gallery keeps of an artwork once it has been seen: what its card and
@@ -29,10 +30,6 @@ export function toSeenArtwork(artwork: Artwork): SeenArtwork {
     artwork;
 
   return { id, title, artistName, displayDate, beginYear, medium, imageUrl, repository, size };
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function nullableText(value: unknown): string | null | undefined {

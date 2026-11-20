@@ -1,19 +1,19 @@
 import type { Artwork } from './artwork';
 
 /**
- * The fields of an artwork, arranged the way the cartel reads them: the
+ * The fields of an artwork, arranged the way the wall label reads them: the
  * essentials first, then the artist, then the rest of the museum record,
  * which stays folded until it is asked for.
  *
  * Every row is dropped when its field is empty, which is the normal case on
  * this API — `culture` and `period` are empty on whole departments, galleries
  * are filled on some and never on others. A block with no row left disappears
- * with them, so the cartel never shows an empty heading.
+ * with them, so the wall label never shows an empty heading.
  *
  * No field appears twice: the collection, the medium, the size and the
  * repository are in the essentials, so the folded record does not repeat them.
  *
- * These are pure functions over the model: they are what makes the cartel
+ * These are pure functions over the model: they are what makes the wall label
  * testable without a browser and without the network.
  */
 export type ArtworkFact = {
@@ -100,7 +100,7 @@ export function artworkArtistSection(artwork: Artwork): ArtworkFactSection | nul
 /**
  * The way out to the museum's own page for this object, when the payload names
  * it. It belongs to the artwork and not to any one block of the record, which
- * is why it is read on its own: the cartel sets it at the foot of the card,
+ * is why it is read on its own: the wall label sets it at the foot of the card,
  * under everything.
  */
 export function artworkMuseumLink(artwork: Artwork): ArtworkFactLink | null {

@@ -1,16 +1,16 @@
 /**
  * A response cache keyed by URL, with two jobs:
  *
- * 1. **Serve what is already known.** The same object is read by the list, the
- *    detail view and the chart sample, and `GET /objects` is read on every
- *    department change. The museum's data changes once a day at most, so a
- *    second call for the same URL is pure waste — and waste here is what
- *    triggers the IP block.
+ * 1. **Serve what is already known.** The department's identifier list is
+ *    read by every draw and by My Gallery, and an artwork drawn, opened or
+ *    rejected is read again when it comes back. The museum's data changes
+ *    once a day at most, so a second call for the same URL is pure waste —
+ *    and waste here is what triggers the IP block.
  * 2. **Collapse simultaneous calls.** Two components asking for the same
  *    object at the same moment share one request instead of sending two.
  *
  * It holds no React: it is a plain object, which is what makes it testable
- * without mounting anything and shareable by the hooks layer later on.
+ * without mounting anything.
  */
 const DEFAULT_CACHE_TTL_MS = 60 * 60 * 1000;
 const DEFAULT_CACHE_MAX_ENTRIES = 500;

@@ -84,7 +84,10 @@ export type MediumCount = {
   count: number;
 };
 
-/** The mediums shown on their own; the rest are one row. */
+/**
+ * The slices of the medium pie: four mediums on their own and the rest as
+ * one, which is as many as the pie has fills that tell apart.
+ */
 export const MAX_MEDIUM_ROWS = 5;
 
 /**

@@ -142,7 +142,7 @@
 
 /* Desktop overrides of the type scale. The two largest styles change size
  * between mobile and desktop, and so does every step of the artwork title:
- * on a phone the cartel is the width of the screen, on a desktop it is five
+ * on a phone the wall label is the width of the screen, on a desktop it is five
  * columns of twelve, which is narrower than the screen but wider than a
  * phone. */
 @media (width >= 761px) {

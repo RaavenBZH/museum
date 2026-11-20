@@ -1,10 +1,5 @@
 import { Pie, PieChart } from 'recharts';
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from '@/components/ui/chart';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { cn } from '@/lib/utils';
 
 /**
@@ -32,10 +27,6 @@ const RING_INNER_RADIUS_PX = 58;
 const RING_OUTER_RADIUS_PX = 76;
 /** Half the ring's thickness, which is what a round line cap would give. */
 const ARC_CORNER_RADIUS_PX = 9;
-
-const RING_CONFIG: ChartConfig = {
-  seen: { label: 'Seen', color: 'var(--color-accent)' },
-};
 
 export function CompletionDonutChart({
   share,
@@ -68,8 +59,7 @@ export function CompletionDonutChart({
       aria-label={description}
     >
       <ChartContainer
-        className="completion-donut-chart__plot aspect-auto size-full"
-        config={RING_CONFIG}
+        className="completion-donut-chart__plot size-full"
         initialDimension={{ width: RING_SIZE_PX, height: RING_SIZE_PX }}
       >
         {/* Recharts makes its SVG a focusable "application", and each pie a
@@ -81,9 +71,8 @@ export function CompletionDonutChart({
             cursor={false}
             content={
               <ChartTooltipContent
-                hideLabel
-                formatter={() => (
-                  <span className="completion-donut-chart__tooltip text-caption-title">
+                describe={() => (
+                  <span className="completion-donut-chart__tooltip text-caption-meta">
                     {tooltip}
                   </span>
                 )}

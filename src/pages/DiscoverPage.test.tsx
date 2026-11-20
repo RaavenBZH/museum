@@ -89,7 +89,7 @@ describe('DiscoverPage', () => {
     );
   });
 
-  it('shows the artwork, its cartel and the way to the next one', () => {
+  it('shows the artwork, its wall label and the way to the next one', () => {
     renderPage({ hasStarted: true, artwork: buildArtwork() });
 
     expect(
@@ -102,7 +102,7 @@ describe('DiscoverPage', () => {
     expect(screen.getByRole('heading', { level: 2, name: 'What next?' })).toBeInTheDocument();
   });
 
-  it('keeps the full museum record folded under the cartel, the museum link with it', async () => {
+  it('keeps the full museum record folded under the wall label, the museum link with it', async () => {
     renderPage({ hasStarted: true, artwork: buildArtwork() });
 
     expect(screen.getByText('1993.132')).not.toBeVisible();
@@ -151,7 +151,7 @@ describe('DiscoverPage', () => {
     expect(screen.queryByText('The Starry Night')).not.toBeInTheDocument();
   });
 
-  it('shows the artwork its address names, with its whole cartel', () => {
+  it('shows the artwork its address names, with its whole wall label', () => {
     renderPage({ artwork: buildArtwork() }, '/discover/437984');
 
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
@@ -171,6 +171,11 @@ describe('DiscoverPage', () => {
       '/gallery',
     );
     expect(screen.getByRole('link', { name: 'Discover' })).toHaveAttribute('href', '/discover');
+    // Discover leads, the gallery follows: one primary, the product's verb.
+    expect(screen.getByRole('link', { name: 'Discover' })).toHaveClass('button--primary');
+    expect(screen.getByRole('link', { name: 'Back to My Gallery' })).not.toHaveClass(
+      'button--primary',
+    );
     // Nothing is asked of the museum for an address it could not answer.
     expect(discovery.open).not.toHaveBeenCalled();
   });

@@ -17,7 +17,7 @@
 const DEFAULT_MIN_REQUEST_INTERVAL_MS = 400;
 
 export type RequestQueue = {
-  /** Runs `task` once the previous one is done and the interval has elapsed. */
+  /** Starts `task` once its turn has come and the interval since the last start has elapsed. */
   schedule: <T>(task: () => Promise<T>) => Promise<T>;
 };
 

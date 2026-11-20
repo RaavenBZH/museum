@@ -28,7 +28,9 @@ export function SeenArtworkList({
   className?: string;
 }) {
   return (
+    // `list-none` makes Safari drop the list role, and with it the count.
     <ul
+      role="list"
       className={cn(
         'seen-artwork-list m-0 flex list-none flex-col gap-1 rounded-card bg-surface p-2',
         className,

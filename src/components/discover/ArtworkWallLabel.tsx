@@ -13,7 +13,7 @@ import {
 import type { ArtworkTitleScale } from '@/domain/artworkTitleScale';
 
 /**
- * The cartel: the whole museum record of the artwork on one surface card,
+ * The wall label: the whole museum record of the artwork on one surface card,
  * beside the picture.
  *
  * It opens on the three lines that name the work, then the essentials, then
@@ -44,13 +44,13 @@ import type { ArtworkTitleScale } from '@/domain/artworkTitleScale';
  * name.
  */
 const ARTWORK_TITLE_CLASS: Record<ArtworkTitleScale, string> = {
-  xl: 'artwork-cartel__title--xl text-artwork-title-xl',
-  l: 'artwork-cartel__title--l text-artwork-title-l',
-  m: 'artwork-cartel__title--m text-artwork-title-m',
-  s: 'artwork-cartel__title--s text-artwork-title-s',
+  xl: 'artwork-wall-label__title--xl text-artwork-title-xl',
+  l: 'artwork-wall-label__title--l text-artwork-title-l',
+  m: 'artwork-wall-label__title--m text-artwork-title-m',
+  s: 'artwork-wall-label__title--s text-artwork-title-s',
 };
 
-export function ArtworkCartel({
+export function ArtworkWallLabel({
   title,
   titleScale,
   artistName,
@@ -76,24 +76,24 @@ export function ArtworkCartel({
   className?: string;
 }) {
   const [isRecordOpen, setIsRecordOpen] = useState(false);
-  // Generated rather than written down, so two cartels on one screen never
+  // Generated rather than written down, so two wall labels on one screen never
   // point their disclosure at the same record.
   const recordId = useId();
 
   return (
     <section
       className={cn(
-        'artwork-cartel flex flex-col gap-8 rounded-card bg-surface p-6 desktop:p-10',
+        'artwork-wall-label flex flex-col gap-8 rounded-card bg-surface p-6 desktop:p-10',
         className,
       )}
       aria-label="Artwork record"
     >
-      <div className="artwork-cartel__identity flex flex-col gap-4">
-        <h1 className={cn('artwork-cartel__title', ARTWORK_TITLE_CLASS[titleScale])}>{title}</h1>
-        <p className="artwork-cartel__author text-lead">
-          <span className="artwork-cartel__artist">{artistName ?? UNKNOWN_ARTIST_LABEL}</span>
+      <div className="artwork-wall-label__identity flex flex-col gap-4">
+        <h1 className={cn('artwork-wall-label__title', ARTWORK_TITLE_CLASS[titleScale])}>{title}</h1>
+        <p className="artwork-wall-label__author text-lead">
+          <span className="artwork-wall-label__artist">{artistName ?? UNKNOWN_ARTIST_LABEL}</span>
           {displayDate === null ? null : (
-            <span className="artwork-cartel__date text-text-muted"> · {displayDate}</span>
+            <span className="artwork-wall-label__date text-text-muted"> · {displayDate}</span>
           )}
         </p>
       </div>
@@ -107,7 +107,7 @@ export function ArtworkCartel({
       {recordSections.length === 0 && museumLink === null ? null : (
         <>
           <Button
-            className="artwork-cartel__disclosure self-start"
+            className="artwork-wall-label__disclosure self-start"
             variant="secondary"
             aria-expanded={isRecordOpen}
             aria-controls={recordId}
@@ -118,7 +118,7 @@ export function ArtworkCartel({
           </Button>
 
           <div
-            className={cn('artwork-cartel__record flex-col gap-8', isRecordOpen && 'flex')}
+            className={cn('artwork-wall-label__record flex-col gap-8', isRecordOpen && 'flex')}
             id={recordId}
             hidden={!isRecordOpen}
           >
@@ -128,7 +128,7 @@ export function ArtworkCartel({
 
             {museumLink === null ? null : (
               <ButtonLink
-                className="artwork-cartel__museum-link self-start"
+                className="artwork-wall-label__museum-link self-start"
                 variant="secondary"
                 href={museumLink.href}
                 target="_blank"

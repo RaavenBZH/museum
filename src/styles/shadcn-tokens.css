@@ -33,16 +33,6 @@
   --ring: var(--color-accent);
   --radius: var(--radius-card);
 
-  /* Chart series, read by the shadcn/ui Chart component. Each one is an
-   * existing semantic token, so the series follow the mode automatically and
-   * no colour outside the palette enters a visualisation. They are ordered by
-   * decreasing prominence; colour is never the only way a series is
-   * identified. */
-  --chart-1: var(--color-accent);
-  --chart-2: var(--color-text-muted);
-  --chart-3: var(--color-text-subtle);
-  --chart-4: var(--color-inverse-muted);
-  --chart-5: var(--color-text);
 }
 
 @theme inline {
@@ -62,9 +52,4 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
 }

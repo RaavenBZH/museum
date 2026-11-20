@@ -5,18 +5,14 @@ import {
   THEME_STORAGE_KEY,
   type ThemeMode,
 } from '@/domain/themeModes';
+import { readStorage, writeStorage } from '@/hooks/browserStorage';
 import { ThemeContext, type ThemeContextValue } from '@/hooks/ThemeContext';
 
+/** The mode kept by an earlier visit; without one, the system preference. */
 function readStoredMode(): ThemeMode {
-  try {
-    const stored = localStorage.getItem(THEME_STORAGE_KEY);
+  const stored = readStorage(THEME_STORAGE_KEY);
 
-    return isThemeMode(stored) ? stored : 'system';
-  } catch {
-    // Storage can be unavailable (private browsing, blocked site data); the
-    // system preference is a safe fallback.
-    return 'system';
-  }
+  return isThemeMode(stored) ? stored : 'system';
 }
 
 /**
@@ -65,12 +61,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const setMode = useCallback((nextMode: ThemeMode) => {
     setStoredMode(nextMode);
-
-    try {
-      localStorage.setItem(THEME_STORAGE_KEY, nextMode);
-    } catch {
-      // The mode still applies for this session even if it cannot be saved.
-    }
+    writeStorage(THEME_STORAGE_KEY, nextMode);
   }, []);
 
   const theme = useMemo<ThemeContextValue>(

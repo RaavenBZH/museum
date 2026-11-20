@@ -34,7 +34,9 @@ export function SeenArtworkGrid({
   className?: string;
 }) {
   return (
+    // `list-none` makes Safari drop the list role, and with it the count.
     <ul
+      role="list"
       className={cn(
         'seen-artwork-grid m-0 grid list-none grid-cols-2 items-start gap-x-3 gap-y-6 p-0 desktop:grid-cols-[repeat(auto-fill,minmax(240px,1fr))] desktop:gap-x-6 desktop:gap-y-8',
         className,
@@ -46,7 +48,7 @@ export function SeenArtworkGrid({
         return (
           <li key={artwork.id} className="seen-artwork-grid__item">
             <Link
-              className="seen-artwork-grid__link group block rounded-image text-text no-underline"
+              className="seen-artwork-grid__link group block rounded-image text-text no-underline transition-colors hover:text-text-muted"
               to={discoverArtworkPath(artwork.id)}
               aria-label={seenArtworkLinkLabel(artwork)}
             >

@@ -1,315 +1,82 @@
 /**
- * Vendored from shadcn/ui: `pnpm exec shadcn add chart`, the primitives the
- * donut-with-text chart is built on. It is copied source like every other
- * component of `src/components/ui`, so it is edited here rather than patched
- * around: its legend was removed because nothing in the project needs one,
- * and the rules that hid the focus outline of the chart's elements were
- * removed because the design system never hides focus. The rest is left as
- * the registry ships it.
+ * Vendored from shadcn/ui (`pnpm exec shadcn add chart`): the container and
+ * the tooltip the project's charts are drawn in. It is copied source, like
+ * every other file of `src/components/ui`, so it is edited here rather than
+ * patched around, and it keeps only what the charts use.
+ *
+ * What the registry ships and this file drops: the legend, the per-series
+ * colour configuration and the `<style>` it wrote — both charts fill their
+ * marks with design-system tokens directly — the dark-mode selector `.dark`,
+ * which this project never sets, and the tooltip's default rows, since every
+ * tooltip here words its marks itself. What remained of the registry's
+ * styling broke the design system (a border, a shadow, an 8 px radius, a raw
+ * `#ccc`), so the tooltip now wears the inverted pill of the system instead.
  */
-import * as React from "react"
-import { cn } from "@/lib/utils"
-import * as RechartsPrimitive from "recharts"
-import type { TooltipValueType } from "recharts"
+import type { ComponentProps, ReactNode } from 'react';
+import {
+  ResponsiveContainer,
+  Tooltip,
+  type TooltipContentProps,
+  type TooltipPayloadEntry,
+  type TooltipValueType,
+} from 'recharts';
+import { cn } from '@/lib/utils';
 
-// Format: { THEME_NAME: CSS_SELECTOR }
-const THEMES = { light: "", dark: ".dark" } as const
+/** The size the chart takes before it has measured its box, as in the registry. */
+const INITIAL_DIMENSION = { width: 320, height: 200 } as const;
 
-const INITIAL_DIMENSION = { width: 320, height: 200 } as const
-type TooltipNameType = number | string
-
-export type ChartConfig = Record<
-  string,
-  {
-    label?: React.ReactNode
-    icon?: React.ComponentType
-  } & (
-    | { color?: string; theme?: never }
-    | { color?: never; theme: Record<keyof typeof THEMES, string> }
-  )
->
-
-type ChartContextProps = {
-  config: ChartConfig
-}
-
-const ChartContext = React.createContext<ChartContextProps | null>(null)
-
-function useChart() {
-  const context = React.useContext(ChartContext)
-
-  if (!context) {
-    throw new Error("useChart must be used within a <ChartContainer />")
-  }
-
-  return context
-}
-
-function ChartContainer({
-  id,
+export function ChartContainer({
   className,
   children,
-  config,
   initialDimension = INITIAL_DIMENSION,
   ...props
-}: React.ComponentProps<"div"> & {
-  config: ChartConfig
-  children: React.ComponentProps<
-    typeof RechartsPrimitive.ResponsiveContainer
-  >["children"]
-  initialDimension?: {
-    width: number
-    height: number
-  }
+}: ComponentProps<'div'> & {
+  children: ComponentProps<typeof ResponsiveContainer>['children'];
+  initialDimension?: { width: number; height: number };
 }) {
-  const uniqueId = React.useId()
-  const chartId = `chart-${id ?? uniqueId.replace(/:/g, "")}`
-
   return (
-    <ChartContext.Provider value={{ config }}>
-      <div
-        data-slot="chart"
-        data-chart={chartId}
-        className={cn(
-          "flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border [&_.recharts-sector[stroke='#fff']]:stroke-transparent",
-          className
-        )}
-        {...props}
-      >
-        <ChartStyle id={chartId} config={config} />
-        <RechartsPrimitive.ResponsiveContainer
-          initialDimension={initialDimension}
-        >
-          {children}
-        </RechartsPrimitive.ResponsiveContainer>
-      </div>
-    </ChartContext.Provider>
-  )
+    <div className={cn('chart-container flex justify-center', className)} {...props}>
+      <ResponsiveContainer initialDimension={initialDimension}>{children}</ResponsiveContainer>
+    </div>
+  );
 }
 
-const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
-  const colorConfig = Object.entries(config).filter(
-    ([, config]) => config.theme ?? config.color
-  )
+export const ChartTooltip = Tooltip;
 
-  if (!colorConfig.length) {
-    return null
-  }
-
-  return (
-    <style
-      dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
-          .map(
-            ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
-${colorConfig
-  .map(([key, itemConfig]) => {
-    const color =
-      itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ??
-      itemConfig.color
-    return color ? `  --color-${key}: ${color};` : null
-  })
-  .join("\n")}
-}
-`
-          )
-          .join("\n"),
-      }}
-    />
-  )
-}
-
-const ChartTooltip = RechartsPrimitive.Tooltip
-
-function ChartTooltipContent({
+/**
+ * The tooltip of a chart: one line per hovered mark, worded by the chart
+ * itself through `describe` — not `formatter`, which Recharts injects into its
+ * tooltip content and would overwrite — on the inverted pill — the one surface of the
+ * system that stands out from the card a chart sits on without a border or a
+ * shadow, which the system does not have.
+ */
+export function ChartTooltipContent({
   active,
   payload,
+  describe,
   className,
-  indicator = "dot",
-  hideLabel = false,
-  hideIndicator = false,
-  label,
-  labelFormatter,
-  labelClassName,
-  formatter,
-  color,
-  nameKey,
-  labelKey,
-}: React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
-  React.ComponentProps<"div"> & {
-    hideLabel?: boolean
-    hideIndicator?: boolean
-    indicator?: "line" | "dot" | "dashed"
-    nameKey?: string
-    labelKey?: string
-  } & Omit<
-    RechartsPrimitive.DefaultTooltipContentProps<
-      TooltipValueType,
-      TooltipNameType
-    >,
-    "accessibilityLayer"
-  >) {
-  const { config } = useChart()
-
-  const tooltipLabel = React.useMemo(() => {
-    if (hideLabel || !payload?.length) {
-      return null
-    }
-
-    const [item] = payload
-    const key = `${labelKey ?? item?.dataKey ?? item?.name ?? "value"}`
-    const itemConfig = getPayloadConfigFromPayload(config, item, key)
-    const value =
-      !labelKey && typeof label === "string"
-        ? (config[label]?.label ?? label)
-        : itemConfig?.label
-
-    if (labelFormatter) {
-      return (
-        <div className={cn("font-medium", labelClassName)}>
-          {labelFormatter(value, payload)}
-        </div>
-      )
-    }
-
-    if (!value) {
-      return null
-    }
-
-    return <div className={cn("font-medium", labelClassName)}>{value}</div>
-  }, [
-    label,
-    labelFormatter,
-    payload,
-    hideLabel,
-    labelClassName,
-    config,
-    labelKey,
-  ])
-
-  if (!active || !payload?.length) {
-    return null
+}: Pick<Partial<TooltipContentProps<TooltipValueType, string>>, 'active' | 'payload'> & {
+  describe: (value: TooltipValueType | undefined, item: TooltipPayloadEntry) => ReactNode;
+  className?: string;
+}) {
+  if (active !== true || payload === undefined || payload.length === 0) {
+    return null;
   }
-
-  const nestLabel = payload.length === 1 && indicator !== "dot"
 
   return (
     <div
       className={cn(
-        "grid min-w-32 items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl",
-        className
+        'chart-tooltip flex flex-col gap-1 rounded-pill bg-inverse-bg px-4 py-2 text-inverse-text',
+        className,
       )}
     >
-      {!nestLabel ? tooltipLabel : null}
-      <div className="grid gap-1.5">
-        {payload
-          .filter((item) => item.type !== "none")
-          .map((item, index) => {
-            const key = `${nameKey ?? item.name ?? item.dataKey ?? "value"}`
-            const itemConfig = getPayloadConfigFromPayload(config, item, key)
-            const indicatorColor = color ?? item.payload?.fill ?? item.color
-
-            return (
-              <div
-                key={index}
-                className={cn(
-                  "flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5 [&>svg]:text-muted-foreground",
-                  indicator === "dot" && "items-center"
-                )}
-              >
-                {formatter && item?.value !== undefined && item.name ? (
-                  formatter(item.value, item.name, item, index, item.payload)
-                ) : (
-                  <>
-                    {itemConfig?.icon ? (
-                      <itemConfig.icon />
-                    ) : (
-                      !hideIndicator && (
-                        <div
-                          className={cn(
-                            "shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)",
-                            {
-                              "h-2.5 w-2.5": indicator === "dot",
-                              "w-1": indicator === "line",
-                              "w-0 border-[1.5px] border-dashed bg-transparent":
-                                indicator === "dashed",
-                              "my-0.5": nestLabel && indicator === "dashed",
-                            }
-                          )}
-                          style={
-                            {
-                              "--color-bg": indicatorColor,
-                              "--color-border": indicatorColor,
-                            } as React.CSSProperties
-                          }
-                        />
-                      )
-                    )}
-                    <div
-                      className={cn(
-                        "flex flex-1 justify-between leading-none",
-                        nestLabel ? "items-end" : "items-center"
-                      )}
-                    >
-                      <div className="grid gap-1.5">
-                        {nestLabel ? tooltipLabel : null}
-                        <span className="text-muted-foreground">
-                          {itemConfig?.label ?? item.name}
-                        </span>
-                      </div>
-                      {item.value != null && (
-                        <span className="font-mono font-medium text-foreground tabular-nums">
-                          {typeof item.value === "number"
-                            ? item.value.toLocaleString()
-                            : String(item.value)}
-                        </span>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
-            )
-          })}
-      </div>
+      {payload
+        .filter((item) => item.type !== 'none')
+        .map((item) => (
+          <div key={String(item.dataKey ?? item.name)} className="chart-tooltip__row">
+            {describe(item.value, item)}
+          </div>
+        ))}
     </div>
-  )
+  );
 }
-
-function getPayloadConfigFromPayload(
-  config: ChartConfig,
-  payload: unknown,
-  key: string
-) {
-  if (typeof payload !== "object" || payload === null) {
-    return undefined
-  }
-
-  const payloadPayload =
-    "payload" in payload &&
-    typeof payload.payload === "object" &&
-    payload.payload !== null
-      ? payload.payload
-      : undefined
-
-  let configLabelKey: string = key
-
-  if (
-    key in payload &&
-    typeof payload[key as keyof typeof payload] === "string"
-  ) {
-    configLabelKey = payload[key as keyof typeof payload] as string
-  } else if (
-    payloadPayload &&
-    key in payloadPayload &&
-    typeof payloadPayload[key as keyof typeof payloadPayload] === "string"
-  ) {
-    configLabelKey = payloadPayload[
-      key as keyof typeof payloadPayload
-    ] as string
-  }
-
-  return configLabelKey in config ? config[configLabelKey] : config[key]
-}
-
-export { ChartContainer, ChartTooltip, ChartTooltipContent }

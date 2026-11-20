@@ -25,6 +25,7 @@ export function AppFooter() {
           href="https://www.metmuseum.org"
           target="_blank"
           rel="noreferrer"
+          aria-label="Metropolitan Museum of Art (opens in a new tab)"
         >
           Metropolitan Museum of Art
         </a>
@@ -34,6 +35,7 @@ export function AppFooter() {
           href="https://metmuseum.github.io"
           target="_blank"
           rel="noreferrer"
+          aria-label="Collection API (opens in a new tab)"
         >
           Collection API
         </a>

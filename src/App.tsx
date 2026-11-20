@@ -11,11 +11,10 @@ import { HomePage } from '@/pages/HomePage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 
 /**
- * The only screen that is loaded on demand. It is the one that draws a chart,
- * and the charting library costs more gzipped than the whole rest of the
- * application: measured on this project, 111 kB against 70 kB. Behind
- * `lazy`, that weight goes into a chunk of its own and the two screens that
- * show artworks never pay for it.
+ * The only screen that is loaded on demand. It is the one that draws charts,
+ * and the charting library weighs about as much gzipped as the whole rest of
+ * the application. Behind `lazy`, that weight goes into a chunk of its own,
+ * which the first screen never waits for.
  */
 const loadGalleryPage = () => import('@/pages/GalleryPage');
 
@@ -37,9 +36,8 @@ const GALLERY_PREFETCH_DEADLINE_MS = 3000;
  * and shows a first set of artworks, which is why the logotype and `Home` lead
  * to the same place while `Discover` has its own route.
  *
- * `My Gallery` opens on the collection itself: how the museum's records are
- * spread across its departments. The artworks a visitor has kept belong there
- * too and are not built yet; the screen shows what it can actually count.
+ * `My Gallery` keeps every artwork Discover has revealed, with how much of
+ * the collection that is.
  *
  * A timed mode was drawn and dropped: it is not being built, so it is in
  * neither the bar nor the home.
@@ -63,7 +61,7 @@ const MAIN_NAVIGATION: readonly MainNavigationItem[] = [
  *
  * The display mode is read here and handed down as props, because everything
  * under `components/` is presentation without state: the shell is the lowest
- * place that can read the run and the mode and still pass them on.
+ * place that can read the mode and still pass it on.
  */
 export function App() {
   const { resolvedMode, setMode } = useTheme();

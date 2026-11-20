@@ -31,4 +31,12 @@
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
   }
+
+  /* On an inverted block the accent falls to 2.40:1 in Cocoa, under the 3:1 a
+   * focus indicator needs; the block's own text colour stands out from it in
+   * both modes, so the ring takes that one there. */
+  .bg-inverse-bg :focus-visible,
+  .bg-inverse-bg:focus-visible {
+    outline-color: var(--color-inverse-text);
+  }
 }

@@ -17,7 +17,7 @@ describe('formatCentimetres', () => {
 });
 
 describe('artworkEssentialFacts', () => {
-  it('states what a visitor asks first, in the order the cartel reads it', () => {
+  it('states what a visitor asks first, in the order the wall label reads it', () => {
     expect(artworkEssentialFacts(buildArtwork())).toEqual([
       { label: 'Medium', value: 'Oil on canvas' },
       { label: 'Dimensions', value: '73.2 × 93.4 cm' },

@@ -43,7 +43,7 @@ import { useGalleryLayout } from '@/hooks/useGalleryLayout';
  * figures of the gallery answer more than one question.
  *
  * It is a container: it reads the run, the collection size, the layout the
- * visitor last chose and, once the section is open, the counts by century,
+ * visitor last chose and the counts by century,
  * and hands everything to presentation components as props.
  */
 export function GalleryPage() {
@@ -51,10 +51,10 @@ export function GalleryPage() {
   const { seen } = useDiscovery();
   const { collectionSize, error, retry } = useDiscoveryCollectionSize();
   const [layout, setLayout] = useGalleryLayout();
-  // Whether "More about my gallery" is unfolded. It is the page's, not the
-  // section's, because opening it is what asks the museum for the counts.
+  // Whether "More about my gallery" is unfolded. The counts it shows are asked
+  // for as soon as the page opens, so they are ready when it unfolds.
   const [areInsightsOpen, setAreInsightsOpen] = useState(false);
-  const centuries = useCollectionCenturies(areInsightsOpen);
+  const centuries = useCollectionCenturies();
 
   const newestFirst = [...seen].reverse();
 
@@ -98,12 +98,15 @@ export function GalleryPage() {
         mediums={mediumCounts(seen)}
       />
 
-      <div className="gallery-page__toolbar mt-11 mb-10 flex justify-end">
-        <GalleryLayoutSwitch layout={layout} onLayoutChange={setLayout} />
-      </div>
+      {/* An empty gallery has nothing to lay out, so it offers no switch. */}
+      {newestFirst.length === 0 ? null : (
+        <div className="gallery-page__toolbar mt-11 mb-10 flex justify-end">
+          <GalleryLayoutSwitch layout={layout} onLayoutChange={setLayout} />
+        </div>
+      )}
 
       {newestFirst.length === 0 ? (
-        <section className="gallery-page__empty flex flex-col items-start gap-5 pt-10 pb-14">
+        <section className="gallery-page__empty mt-11 flex flex-col items-start gap-5 pb-14">
           <h2 className="gallery-page__empty-title text-tile-title">No artwork seen yet.</h2>
           <p className="gallery-page__empty-lead text-lead text-text-muted">
             Draw one in Discover and it will be kept here, with every one after it.
@@ -178,9 +181,13 @@ function GalleryProgressCard({
         </p>
       </div>
 
-      <ButtonRouterLink className="gallery-page__action shrink-0" variant="primary" to="/discover">
-        Continue discovering
-      </ButtonRouterLink>
+      {/* Before anything is seen, the way to Discover is the empty gallery's
+          own action below: one primary for one destination. */}
+      {seenCount === 0 ? null : (
+        <ButtonRouterLink className="gallery-page__action shrink-0" variant="primary" to="/discover">
+          Continue discovering
+        </ButtonRouterLink>
+      )}
     </section>
   );
 }

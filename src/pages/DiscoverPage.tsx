@@ -1,6 +1,6 @@
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { ArtworkCartel } from '@/components/discover/ArtworkCartel';
+import { ArtworkWallLabel } from '@/components/discover/ArtworkWallLabel';
 import { ArtworkStage } from '@/components/discover/ArtworkStage';
 import { NextArtworkBar } from '@/components/discover/NextArtworkBar';
 import { NoticePanel } from '@/components/layout/NoticePanel';
@@ -29,12 +29,12 @@ import { useDiscovery } from '@/hooks/useDiscovery';
  * call to the museum.
  *
  * The artwork and the way to the next one share the left column, which stays
- * on screen while the cartel on the right is read: the picture is what the
+ * on screen while the wall label on the right is read: the picture is what the
  * visitor came for, so it does not scroll away under the record. Below
  * 761 px the two columns become one, the picture first.
  *
  * It is a container and nothing else — it reads the run, turns the model into
- * the rows the cartel needs, and hands everything to presentation components
+ * the rows the wall label needs, and hands everything to presentation components
  * as props. It holds no state and makes no call: it tells the run what the
  * visitor asked for — start, open, next — and the run does the calling.
  *
@@ -55,7 +55,7 @@ import { useDiscovery } from '@/hooks/useDiscovery';
  *
  * At `/discover/{objectID}` the screen shows that one artwork — the one a
  * visitor clicked in My Gallery, or whose address they were given — with its
- * whole cartel, as if it had been drawn. An address that names no artwork,
+ * whole wall label, as if it had been drawn. An address that names no artwork,
  * an artwork outside the collection or one without a picture each say so and
  * offer the way back, never a blank screen. Asking for the next artwork from
  * there returns to `/discover`, so the address always names what is shown.
@@ -119,21 +119,25 @@ export function DiscoverPage() {
 
   // From an artwork's address, the next artwork is the run's, not this
   // address's: going back to `/discover` keeps the address true to the screen.
-  const handleNext = useCallback(() => {
+  // A plain function: the band it goes to is not memoised, so a stable
+  // identity would buy nothing.
+  const handleNext = () => {
     next();
 
     if (isNamedAddress) {
       navigate(DISCOVER_PATH);
     }
-  }, [next, isNamedAddress, navigate]);
+  };
 
   const wayBack = (
     <div className="discover-page__way-back flex flex-wrap items-center gap-3">
-      <ButtonRouterLink variant="primary" to="/gallery">
-        Back to My Gallery
-      </ButtonRouterLink>
-      <ButtonRouterLink variant="secondary" to={DISCOVER_PATH}>
+      {/* Discover leads: a visitor holding a bad link may never have opened
+          My Gallery, and Discover is the verb of the product. */}
+      <ButtonRouterLink variant="primary" to={DISCOVER_PATH}>
         Discover
+      </ButtonRouterLink>
+      <ButtonRouterLink variant="secondary" to="/gallery">
+        Back to My Gallery
       </ButtonRouterLink>
     </div>
   );
@@ -231,8 +235,8 @@ export function DiscoverPage() {
         <NextArtworkSection key={artwork.id} isAwaitingNext={isAwaitingNext} onNext={handleNext} />
       </div>
 
-      <ArtworkCartel
-        className="discover-page__cartel desktop:col-span-5"
+      <ArtworkWallLabel
+        className="discover-page__wall-label desktop:col-span-5"
         title={artwork.title}
         titleScale={artworkTitleScale(artwork.title)}
         artistName={artwork.artistName}

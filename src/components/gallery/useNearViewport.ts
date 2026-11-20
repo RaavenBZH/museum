@@ -13,7 +13,7 @@ const NEAR_VIEWPORT_MARGIN = '240px 0px';
  * back up.
  *
  * It is the state of one card and of nothing else — like the folded record of
- * the cartel — which is why it sits beside the components that use it rather
+ * the wall label — which is why it sits beside the components that use it rather
  * than in `hooks/`, whose state is the application's. A browser without
  * `IntersectionObserver` is treated as one where everything is near: the
  * gallery then loads everything, which is what it would do without this.

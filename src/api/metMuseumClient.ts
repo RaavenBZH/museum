@@ -9,7 +9,7 @@ import { createResponseCache, type ResponseCache } from './responseCache';
 
 /**
  * The only place in the project that calls `fetch`. It reads JSON over `GET`,
- * and composes the three guarantees the Met API needs:
+ * and composes the guarantees the Met API needs:
  *
  * - the HTTP status is checked **before** the body is read;
  * - the calls are spaced by a {@link RequestQueue}, to stay under the IP block;
