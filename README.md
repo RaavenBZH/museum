@@ -39,36 +39,134 @@ Why these choices:
 | Completion ring: share of the collection seen | `/gallery` | **Chart** (REQ-03) |
 | Home page, not-found page, day and night modes | `/`, any unknown address | Navigation (REQ-04) |
 
-**Discover.** Arriving on the screen draws an artwork at once, and a second one
-is drawn behind it, so "Discover another" shows the next work without waiting
-for the museum. The artwork's picture keeps the real proportions of the
-object. The wall label beside it gives the title, set at one of four sizes
-depending on its length, and the artist and date. Below them come the
-essentials (medium, dimensions, surface area, where it is kept, collection)
-and the artist. A folded section holds the full record: credit line, image
-rights, accession details and the link to the museum's own page.
-The next-artwork button is held shut for three seconds, so that each work is
-looked at, and it says how long is left. Leaving for another screen and
-coming back finds the same artwork: the run lives above the router.
+The three screenshots below were taken in the night mode, Cocoa, on a desktop
+browser 1,512 px wide.
 
-**Artwork record at `/discover/<id>`.** Any artwork of the collection opens at
-its own address, from the gallery or from a shared link. An address that is
-not a number, an identifier the department does not hold, or a work the museum
-serves no picture for each gives a clear message, a way to try again, and a
-way back to My Gallery — never a blank page.
+### Home — `/`
 
-**My Gallery.** Every artwork revealed by Discover is kept, newest first, on
-this visit and the next ones. They are shown in a grid at their real
-proportions or in a list with a thumbnail, where each one is kept, and its
-size. The layout chosen is remembered. Each card opens the artwork on Discover.
-A visitor who has seen nothing yet is invited to start.
+![The home page in Cocoa mode: the headline block with its two buttons, and a bento grid of seven European Paintings](docs/home.png)
 
-**Completion ring.** A ring at the top of My Gallery shows the share of
-European Paintings already seen, how many works are left, and the total it is
-measured against. The ring uses the shadcn/ui donut-with-text chart, and the
-line beside it states the sample: the 2,650 records of the department.
+**What the screenshot shows**
 
-**Everywhere.**
+- **The bar.** It carries the logotype, which leads home, then the three
+  destinations, with **Home** marked as the current one. On the right is the
+  day and night switch, with the crescent pressed.
+- **The headline block.** "Discover art. The way you want." with one line on
+  what the application does, the primary **Discover** button and the secondary
+  **My Gallery** button.
+- **The bento grid.** It holds seven artworks of European Paintings: David's
+  *The Death of Socrates*, Bruegel's *The Harvesters*, Velázquez's *Philip IV*,
+  Manet's *The Monet Family in Their Garden at Argenteuil*, Van Gogh's
+  *Self-Portrait with a Straw Hat*, and two more below the fold.
+  - Each tile's size follows the shape of the painting it holds: wide,
+    portrait, panoramic or small.
+  - Each caption gives the title, the artist and the year. The year is in the
+    monospace face, because it is a figure.
+
+**Features**
+
+- **A fixed selection.** The selection never changes and costs no call to the
+  museum. Every title, artist, date and picture is the API's own value for a
+  real object.
+- **Every tile opens that artwork** with its full record on Discover, at
+  `/discover/<id>`.
+- **Long captions stay inside their box.** A long title is held to two lines,
+  and a long artist name, like Velázquez's, is cut with an ellipsis, so every
+  caption keeps the same height.
+- **The pictures load lazily, the textures are veiled.** Pictures load as
+  they scroll into view. The two textures behind the inverted blocks are
+  decorative, veiled so that their text keeps its contrast.
+
+### Discover — `/discover` and `/discover/<id>`
+
+![Discover in Cocoa mode: The Death of Socrates at its real proportions on the left, the What next band under it, and the wall label on the right](docs/discover.png)
+
+**What the screenshot shows**
+
+- **The bar** with **Discover** marked as the current destination.
+- **On the left, the picture.** *The Death of Socrates* is framed at the
+  painting's real proportions (129.5 × 196.2 cm).
+- **Under the picture, the "What next?" band.** It holds the
+  **Discover another** button.
+- **On the right, the wall label.**
+  - The title, at the largest of its four sizes, since it is short.
+  - "Jacques Louis David · 1787".
+  - **The essentials**: medium, dimensions, the surface area computed from
+    them (2.54 m²), where the painting is kept, and the collection.
+  - **The artist**: nationality, life dates and biography.
+  - **See the full record**, which unfolds the rest.
+- **The footer** credits the museum and its Collection API.
+
+**Features**
+
+- **A draw on arrival, with the next artwork ready behind it.** An artwork is
+  drawn at random the moment the screen opens. A second one is drawn behind
+  it, its picture preloaded, so **Discover another** shows the next work
+  without waiting for the museum. A work is never drawn twice, even across
+  visits.
+- **A moment to look.** The button is held shut for three seconds after an
+  artwork appears, and the band says how long is left.
+- **A record that scales.** The title takes one of four sizes depending on its
+  length, so a two-word title and a paragraph-long one both fit the column.
+  Empty fields are left out rather than shown as orphan labels.
+- **The full record behind one click.** The folded record holds the object's
+  details, the credit line, the image rights ("Public domain", or the
+  museum's credit when the work is not) and the link to the artwork's page on
+  metmuseum.org, which says it opens a new tab.
+- **The same artwork when you come back.** Leaving for another screen and
+  coming back finds the same artwork: the run lives above the router.
+- **Every artwork at its own address.** `/discover/<id>` opens any artwork of
+  the collection with this same screen, from My Gallery, from the home page or
+  from a shared link.
+  - An address that is not a number, an artwork the department does not hold,
+    or one the museum serves no picture for gets a clear message, **Try
+    again**, and a way back.
+  - It is never a blank page.
+
+### My Gallery — `/gallery`
+
+![My Gallery in Cocoa mode, list layout: the completion ring at 3 % with 2,574 left, the headline, and the list of European Paintings seen with thumbnails](docs/gallery.png)
+
+**What the screenshot shows**
+
+- **The progress card.**
+  - On the left, the completion ring: **3 %** of the collection seen, with
+    **2,574 left** under it.
+  - The headline "You have seen 76 artworks." and its sample, "Out of the
+    2,650 in European Paintings."
+  - On the right, **Continue discovering**.
+- **The layout switch**, set to **List**.
+- **The collection heading.** "European Paintings", one line on what it holds,
+  and the count, "76 artworks".
+- **The list.** Its rows go from the most recently seen down: Manet's *The
+  Monet Family*, Burne-Jones's *The Love Song*, Vermeer's *Study of a Young
+  Woman*, Velázquez's *Mariana of Austria*.
+  - Each row gives a thumbnail, the title, the artist and date, where the work
+    is kept, and its size in centimetres.
+
+**Features**
+
+- **Every artwork Discover reveals is kept.** It stays in the browser, on this
+  visit and the next ones, so the gallery opens without a single call to the
+  museum.
+- **The completion ring** is the chart of the application. It uses the
+  shadcn/ui donut-with-text, the share is written in its middle, and the sample
+  is stated beside it. The total is the very list Discover draws from, so "the
+  possible artworks" means the same thing on both screens.
+- **Grid or list, and the choice is remembered.** The grid shows each picture
+  at its real proportions. The list adds where each work is kept. A pointer
+  over a row highlights it.
+- **Pictures load only as they come into view.** A gallery of hundreds of works
+  never downloads them all. Until a card comes within about one row of the
+  screen, its frame is drawn empty at its final size, so nothing moves when the
+  picture arrives.
+- **Every card and every row opens the artwork on Discover**, at
+  `/discover/<id>`.
+- **A first visit is invited to start.** A visitor who has seen nothing yet is
+  invited to start, and the ring shows the size of the collection at once,
+  from the last count kept in the browser.
+
+### Everywhere
 
 - **Day and night modes, Sand and Cocoa.** Each is one palette with its roles
   swapped. The mode chosen is pinned before the first paint, so it never
@@ -163,7 +261,10 @@ pnpm test:watch  # run the tests in watch mode while developing
 │   └── nginx.conf                    # static server with client-side route fallback
 ├── components.json                   # shadcn/ui registry configuration
 ├── docs
-│   └── DESIGN_SYSTEM.md              # the Sand / Cocoa design system reference
+│   ├── DESIGN_SYSTEM.md              # the Sand / Cocoa design system reference
+│   ├── home.png                      # screenshot of the home page, in the Features section
+│   ├── discover.png                  # screenshot of Discover
+│   └── gallery.png                   # screenshot of My Gallery
 ├── public
 │   └── favicon.svg                   # the logotype mark, following the browser's colour scheme
 ├── vite.config.ts                    # Vite plugins (React, Tailwind), @ alias and Vitest setup
