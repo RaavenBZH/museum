@@ -21,12 +21,16 @@ describe('HeadlineBlock', () => {
   });
 
   it('leaves the badge and the actions out when it has none', () => {
-    const { container } = render(
+    render(
       <HeadlineBlock firstLine="Learn the collection." secondLine="One artwork at a time." lead="" />,
     );
 
-    expect(container.querySelector('.headline-block__badge')).not.toBeInTheDocument();
-    expect(container.querySelector('.headline-block__actions')).not.toBeInTheDocument();
+    // Nothing but the headline and its line: no announcement, no way out.
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    expect(screen.getByRole('region')).toHaveTextContent(
+      'Learn the collection.One artwork at a time.',
+    );
   });
 
   it('holds the badge and the actions it is given', () => {

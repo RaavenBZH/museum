@@ -128,11 +128,14 @@ describe('GalleryPage', () => {
   it('shows the last artwork seen first', () => {
     renderPage();
 
-    const titles = [...document.querySelectorAll('.seen-artwork-grid__title')].map(
-      (title) => title.textContent,
-    );
+    const openings = screen
+      .getAllByRole('link', { name: /Vincent van Gogh, 1889$/ })
+      .map((link) => link.getAttribute('aria-label'));
 
-    expect(titles).toEqual(['Sunflowers', 'The Starry Night']);
+    expect(openings).toEqual([
+      'Sunflowers, Vincent van Gogh, 1889',
+      'The Starry Night, Vincent van Gogh, 1889',
+    ]);
   });
 
   it('groups the artworks under the collection they come from', () => {
@@ -146,16 +149,17 @@ describe('GalleryPage', () => {
     const user = userEvent.setup();
 
     renderPage();
-    expect(document.querySelector('.seen-artwork-grid')).toBeInTheDocument();
+    // The grid sets each artwork as a figure with its caption; the list does not.
+    expect(screen.getAllByRole('figure')).toHaveLength(2);
 
     await user.click(screen.getByRole('button', { name: 'List' }));
 
-    expect(document.querySelector('.seen-artwork-list')).toBeInTheDocument();
-    expect(document.querySelector('.seen-artwork-grid')).not.toBeInTheDocument();
+    expect(screen.queryAllByRole('figure')).toHaveLength(0);
+    expect(screen.getByRole('link', { name: 'Sunflowers, Vincent van Gogh, 1889' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Grid' }));
 
-    expect(document.querySelector('.seen-artwork-grid')).toBeInTheDocument();
+    expect(screen.getAllByRole('figure')).toHaveLength(2);
   });
 
   it('opens on the layout the visitor chose last time', async () => {
@@ -168,7 +172,7 @@ describe('GalleryPage', () => {
     // A new visit to the screen, as after a trip to Discover or a reload.
     renderPage();
 
-    expect(document.querySelector('.seen-artwork-list')).toBeInTheDocument();
+    expect(screen.queryAllByRole('figure')).toHaveLength(0);
     expect(screen.getByRole('button', { name: 'List' })).toHaveAttribute('aria-pressed', 'true');
   });
 

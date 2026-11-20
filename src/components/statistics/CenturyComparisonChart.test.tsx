@@ -22,7 +22,7 @@ describe('CenturyComparisonChart', () => {
   it('draws one series, so it needs no legend and states no percentage', () => {
     const { container } = render(<CenturyComparisonChart rows={ROWS} />);
 
-    expect(container.querySelector('.century-comparison-chart__legend')).toBeNull();
+    expect(screen.queryByRole('list')).not.toBeInTheDocument();
     expect(container).not.toHaveTextContent('%');
   });
 

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { MainNavigation, type MainNavigationItem } from './MainNavigation';
@@ -29,8 +29,8 @@ describe('MainNavigation', () => {
   });
 
   it('gives every link the same weight and size, so nothing moves on a change', () => {
-    const { container } = renderNavigation('/gallery');
-    const links = [...container.querySelectorAll('.main-navigation__link')];
+    renderNavigation('/gallery');
+    const links = within(screen.getByRole('navigation')).getAllByRole('link');
 
     expect(links).toHaveLength(items.length);
     links.forEach((link) => {

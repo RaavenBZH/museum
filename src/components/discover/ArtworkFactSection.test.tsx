@@ -18,12 +18,15 @@ const museum: ArtworkFactSectionModel = {
 
 describe('ArtworkFactSection', () => {
   it('sets each field as a label and its value, under the block heading', () => {
-    const { container } = render(<ArtworkFactSection section={essentials} />);
+    render(<ArtworkFactSection section={essentials} />);
 
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('The essentials');
-    expect(screen.getByText('Medium').tagName).toBe('DT');
-    expect(screen.getByText('Oil on canvas').tagName).toBe('DD');
-    expect(container.querySelectorAll('.artwork-fact-section__row')).toHaveLength(2);
+    expect(screen.getAllByRole('term').map((term) => term.textContent)).toEqual([
+      'Medium',
+      'Dimensions',
+    ]);
+    expect(screen.getAllByRole('definition')).toHaveLength(2);
+    expect(screen.getAllByRole('definition')[0]).toHaveTextContent('Oil on canvas');
   });
 
   it('takes the heading level it is given, for a block nested under another', () => {

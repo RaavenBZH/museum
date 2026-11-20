@@ -89,7 +89,10 @@ describe.each([
 
     for (const link of screen.getAllByRole('link')) {
       expect(link).toHaveClass('group');
-      expect(link.querySelector('.seen-artwork-picture')).toBeInTheDocument();
+      // The picture, or the words that stand for a missing one, sit inside it.
+      expect(
+        within(link).queryByRole('img') ?? within(link).queryByText(/^No image/),
+      ).not.toBeNull();
     }
   });
 
@@ -123,16 +126,16 @@ describe('SeenArtworkList', () => {
   });
 
   it('shows which row the pointer is on, a step off the card', () => {
-    const { container } = render(<SeenArtworkList artworks={SEEN} />);
+    render(<SeenArtworkList artworks={SEEN} />);
 
-    for (const row of container.querySelectorAll('.seen-artwork-list__row')) {
+    for (const row of screen.getAllByRole('link')) {
       expect(row).toHaveClass('hover:bg-surface-muted', 'transition-colors');
     }
   });
 
   it('is one surface card, as the mockup draws it', () => {
-    const { container } = render(<SeenArtworkList artworks={SEEN} />);
+    render(<SeenArtworkList artworks={SEEN} />);
 
-    expect(container.querySelector('.seen-artwork-list')).toHaveClass('rounded-card', 'bg-surface');
+    expect(screen.getByRole('list')).toHaveClass('rounded-card', 'bg-surface');
   });
 });

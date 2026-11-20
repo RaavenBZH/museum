@@ -145,7 +145,7 @@ describe('ArtworkWallLabel', () => {
   });
 
   it('closes the folded record with the way out to the museum, outside every block', async () => {
-    const { container } = renderWallLabel();
+    renderWallLabel();
 
     // Hidden with the rest of the record, so it is not offered at all until
     // the visitor asks for it.
@@ -161,9 +161,16 @@ describe('ArtworkWallLabel', () => {
     expect(link).toHaveAttribute('href', museumLink.href);
     expect(link).toHaveAttribute('target', '_blank');
     expect(link).toHaveAttribute('rel', 'noreferrer');
-    // Last thing in the record, and in none of its blocks.
-    expect(container.querySelector('.artwork-wall-label__record')?.lastElementChild).toBe(link);
-    expect(container.querySelector('.artwork-fact-section')).not.toContainElement(link);
+    // Last thing in the record the disclosure controls, and in none of its blocks.
+    const recordId = screen
+      .getByRole('button', { name: 'Hide the full record' })
+      .getAttribute('aria-controls');
+
+    expect(document.getElementById(recordId ?? '')?.lastElementChild).toBe(link);
+    // Every block lists its fields; the way out is not one of them.
+    for (const field of screen.getAllByRole('definition')) {
+      expect(field).not.toContainElement(link);
+    }
   });
 
   it('shows no way out when the museum names no page for the object', () => {

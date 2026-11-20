@@ -61,14 +61,18 @@ describe('HomePage', () => {
   });
 
   it('shows no counter on the gallery tile, because nothing has counted it yet', () => {
-    const { container } = render(
+    render(
       <MemoryRouter>
         <HomePage />
       </MemoryRouter>,
     );
-    const tile = container.querySelector('.action-tile');
+    // The tile is the gallery link that holds a picture; the headline's button does not.
+    const tile = screen
+      .getAllByRole('link', { name: /My Gallery/ })
+      .find((link) => link.querySelector('img') !== null);
 
-    expect(within(tile as HTMLElement).getByText('My Gallery')).toBeInTheDocument();
-    expect(tile?.querySelector('.action-tile__counter')).toBeNull();
+    expect(tile).toBeDefined();
+    // A counter would be a figure on the tile; there is none to read.
+    expect(within(tile as HTMLElement).queryByText(/\d/)).not.toBeInTheDocument();
   });
 });

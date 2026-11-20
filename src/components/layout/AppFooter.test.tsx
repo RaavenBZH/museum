@@ -17,9 +17,9 @@ describe('AppFooter', () => {
   });
 
   it('opens both of them in a tab of their own, without leaking the referrer', () => {
-    const { container } = render(<AppFooter />);
+    render(<AppFooter />);
 
-    for (const link of container.querySelectorAll('.app-footer__link')) {
+    for (const link of screen.getAllByRole('link')) {
       expect(link).toHaveAttribute('target', '_blank');
       expect(link).toHaveAttribute('rel', 'noreferrer');
     }

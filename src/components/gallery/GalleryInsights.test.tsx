@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ComponentProps } from 'react';
 import { describe, expect, it, vi } from 'vitest';
@@ -63,11 +63,14 @@ describe('GalleryInsights', () => {
         centuries={CENTURIES}
         centuriesError={null}
         onRetryCenturies={() => {}}
-        mediums={[]}
+        mediums={[{ key: 'oil on canvas', label: 'Oil on canvas', count: 2 }]}
       />,
     );
 
-    expect(container.querySelector('.gallery-insights__note')).toBeNull();
+    // Each card holds its heading, its one line and its chart, and no note.
+    for (const card of within(container).getAllByRole('region')) {
+      expect(card.querySelectorAll('p')).toHaveLength(1);
+    }
   });
 
   it('says it is counting while the museum answers', () => {

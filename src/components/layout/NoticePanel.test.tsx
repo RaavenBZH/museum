@@ -13,10 +13,12 @@ describe('NoticePanel', () => {
   });
 
   it('is named by its own heading for assistive technology', () => {
-    const { container } = render(<NoticePanel title="This page does not exist." lead="Nope." />);
-    const panel = container.querySelector('.notice-panel');
+    render(<NoticePanel title="This page does not exist." lead="Nope." />);
 
-    expect(panel).toHaveAttribute('aria-labelledby', screen.getByRole('heading').id);
+    expect(screen.getByRole('region', { name: 'This page does not exist.' })).toHaveAttribute(
+      'aria-labelledby',
+      screen.getByRole('heading').id,
+    );
   });
 
   it('announces a state when it is one, and stays quiet when it is not', () => {

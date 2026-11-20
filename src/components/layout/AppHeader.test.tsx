@@ -22,17 +22,16 @@ function renderHeader(address = '/') {
 
 describe('AppHeader', () => {
   it('keeps the navigation in the middle column, whatever the sides hold', () => {
-    const { container } = renderHeader();
+    renderHeader();
 
-    expect(container.querySelector('.main-navigation')).toHaveClass('col-start-2');
-    expect(container.querySelector('.app-header__action')).toHaveClass('col-start-3');
+    expect(screen.getByRole('navigation', { name: 'Main navigation' })).toHaveClass('col-start-2');
+    expect(screen.getByRole('group', { name: 'Display mode' })).toHaveClass('col-start-3');
   });
 
   it('carries the day / night switch alone, on a phone as well', () => {
-    const { container } = renderHeader();
+    renderHeader();
 
-    expect(screen.getByRole('group', { name: 'Display mode' })).toBeInTheDocument();
-    expect(container.querySelector('.theme-mode-switch')).not.toHaveClass('hidden');
+    expect(screen.getByRole('group', { name: 'Display mode' })).not.toHaveClass('hidden');
     // There is no account and no settings screen, so the slot offers neither.
     expect(screen.queryByRole('button', { name: /sign in|settings/i })).not.toBeInTheDocument();
   });
