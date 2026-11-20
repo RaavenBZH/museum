@@ -108,7 +108,7 @@ The title of an artwork is the one style whose size is chosen from the content
 rather than from the element. The museum's titles run from two words ("In the
 Sun") to a paragraph naming the sitter, their rank and their dates, and they
 are set in a column of fixed width: one size would either dwarf the short ones
-or let the long ones take the whole cartel.
+or let the long ones take the whole wall label.
 
 So it has a scale of its own, in four steps, picked by title length. The
 breakpoints are **lengths in characters**, not viewport widths. Measured on 24
@@ -222,9 +222,9 @@ Built, with their tests beside them:
 | `BentoGrid`                | [`src/components/layout/BentoGrid.tsx`](../src/components/layout/BentoGrid.tsx)             |
 | `ArtworkCard`, `ArtworkImage` | [`src/components/artwork/`](../src/components/artwork/)                                  |
 | `HeadlineBlock`, `ActionTile`, `ClosingBanner` | [`src/components/landing/`](../src/components/landing/)                 |
-| `ArtworkStage`, `ArtworkCartel`, `ArtworkFactSection`, `NextArtworkBar` | [`src/components/discover/`](../src/components/discover/) |
+| `ArtworkStage`, `ArtworkWallLabel`, `ArtworkFactSection`, `NextArtworkBar` | [`src/components/discover/`](../src/components/discover/) |
 | `NoticePanel`, `ErrorBoundary` | [`src/components/layout/`](../src/components/layout/)                                   |
-| `GalleryInsights`, `CenturyComparisonChart`, `MediumBreakdownChart` | [`src/components/gallery/`](../src/components/gallery/), [`src/components/statistics/`](../src/components/statistics/) |
+| `GalleryInsights`, `CenturyComparisonChart`, `MediumPieChart` | [`src/components/gallery/`](../src/components/gallery/), [`src/components/statistics/`](../src/components/statistics/) |
 | `CompletionDonutChart`     | [`src/components/statistics/CompletionDonutChart.tsx`](../src/components/statistics/CompletionDonutChart.tsx) |
 | `GalleryLayoutSwitch`, `GalleryCollectionGroup`, `SeenArtworkGrid`, `SeenArtworkList`, `SeenArtworkPicture` | [`src/components/gallery/`](../src/components/gallery/) |
 | `ChartContainer`, `ChartTooltip` (vendored from shadcn/ui) | [`src/components/ui/chart.tsx`](../src/components/ui/chart.tsx) |
@@ -400,7 +400,10 @@ returns `dimensions` as free text ("36 1/4 × 28 3/4 in.") and cannot feed
 
 `ArtworkImage` takes a nullable source, because about six artworks in a hundred
 come back without a picture: that is a normal state, and the fallback says so
-in words on a `--color-surface-muted` ground. Alternative text follows
+in words on a `--color-surface-muted` ground — on `--color-surface` in the
+My Gallery grid, whose frames sit on the page with no card around them. In a
+thumbnail of the list the words shrink to "No image", which fits a 56 px
+square where "No image available" would be cut. Alternative text follows
 `Firstname Lastname, Title, year`. Only public-domain artworks, or artworks
 whose rights are cleared, are displayed.
 
@@ -483,6 +486,11 @@ carries meaning:
   instead of spilling, and nothing in the grid reflows. The missing-picture
   fallback does not move — there is nothing to look closer at.
 
+Two surfaces of My Gallery answer a hover without moving, so they keep their
+answer under reduced motion: a **row of the list** takes
+`--color-surface-muted` on its `--color-surface` card, and the **caption of a
+grid card** turns `--color-text-muted`, as a link of the page does.
+
 ### Navigation bar
 
 A `rounded-pill` container on `--color-surface` with 4 px padding and 4 px
@@ -498,7 +506,7 @@ rest on colour alone. Hidden below 761 px. Carries
 
 [`src/pages/DiscoverPage.tsx`](../src/pages/DiscoverPage.tsx) is laid out on
 **twelve columns with 24 px gutters**, the only grid of the system besides the
-bento: the artwork takes seven columns, the cartel five, and both start at the
+bento: the artwork takes seven columns, the wall label five, and both start at the
 top. The artwork column is **sticky 24 px from the top**, so the picture stays
 on screen while the record beside it is read; below 761 px the two become one
 column, the picture first.
@@ -511,7 +519,7 @@ column, the picture first.
   bento's two row heights. An object the museum has not measured keeps a 4:3
   frame rather than a size nobody knows. The panel takes the height of its
   frame: no fixed height, so a tall portrait cannot overflow it.
-- **`ArtworkCartel`**: one `--color-surface` card, 24 px of padding and 40 px
+- **`ArtworkWallLabel`**: one `--color-surface` card, 24 px of padding and 40 px
   above 761 px, 32 px between its parts. The title takes the artwork-title scale; the author line
   is `text-lead`, the date in `--color-text-muted` beside it. Then the blocks,
   then one secondary button that folds the rest of the record away, then that
@@ -533,7 +541,13 @@ column, the picture first.
   is still being drawn. It is held with `aria-disabled` and not `disabled`, so
   it keeps its place in the tab order, and `aria-describedby` ties it to the
   line that states the wait.
-- **Figures in the cartel are set in the sans face**, not in the monospace
+- **The address states.** At `/discover/<id>` the screen opens the artwork
+  the address names. While it is read, a `NoticePanel` says "Opening the
+  artwork…"; an address that is not a number, an artwork the collection does
+  not hold or one the museum serves no picture for gets a `NoticePanel` with
+  the reason and two actions — **Try again** or the primary **Discover**,
+  then the secondary **Back to My Gallery**.
+- **Figures in the wall label are set in the sans face**, not in the monospace
   family that the rest of the system reserves for them. A dimension or a year
   sits here inside a prose list, beside a medium and a credit line; switched to
   `text-mono` it would also drop from 15 px to 12 px and the rows would stop
@@ -573,10 +587,21 @@ Gallery mockup: the progress card, the layout switch, then the artworks seen.
   visitor's few works, its hundreds would flatten them, and a second axis is
   not allowed. The drawing is hidden from screen readers, which read the same
   figures from a visually hidden table.
-- **`MediumBreakdownChart`**: ranked bars, one per medium — the label in
-  `text-caption-title`, the count in `text-mono`, an 8 px accent bar on a
-  `--color-surface-muted` track, as long as its count against the most
-  frequent medium.
+- **Chart tooltips**: the inverted pill — `rounded-pill` on
+  `--color-inverse-bg`, `text-caption-meta` in `--color-inverse-text` — the one
+  surface that stands out from the card a chart sits on without a border or a
+  shadow, which the system does not have.
+- **`MediumPieChart`**: a 160 px pie, one slice per medium, the most frequent
+  first from the top, at most five — four mediums and the rest as one. The
+  fills are tokens in this order: the accent, `--color-text`,
+  `--color-text-muted`, `--color-text-subtle`, `--color-inverse-muted`, parted
+  by a 2 px stroke of `--color-surface`. Beside it, a legend gives every slice
+  its swatch, its medium in `text-caption-title` and its count in `text-mono`:
+  the legend, not the colour, is what names a slice.
+- **The empty gallery**: before anything has been seen, the screen shows no
+  layout switch — there is nothing to lay out — and one primary action, the
+  empty state's **Discover**; the progress card leaves its own button out, so
+  one destination is never offered twice.
 - **`GalleryLayoutSwitch`**: Grid or List, the pill group of the mode switch —
   `--color-surface`, 4 px of padding, the side in use in the inverted pill and
   `aria-pressed`, each side 44 px tall with its icon and its word in
@@ -593,7 +618,7 @@ Gallery mockup: the progress card, the layout switch, then the artworks seen.
 - **`SeenArtworkList`**: one `rounded-card` on `--color-surface` with 8 px of
   padding, one row per artwork — a 72 px square thumbnail, the title over the
   artist and date, where it is kept, and its size in `text-mono`; below 761 px
-  the row keeps a 56 px thumbnail and the title.
+  the row keeps a 56 px thumbnail, the title and the artist and date.
 - **Every card and every row is a link** to the artwork on Discover, at
   `/discover/<id>`: the whole figure or row is the target, named by title,
   artist and date, with the system's focus outline, and the picture's hover
@@ -642,7 +667,14 @@ on each one; neither is built, since nothing records a like yet.
 Every clickable area measures at least 44 × 44 px. Interactive elements are real
 `<a href>` or `<button>` elements, never clickable `<div>`s. An icon-only button
 carries an `aria-label`. Focus is never removed: `:focus-visible` draws a 2 px
-accent outline with a 2 px offset.
+accent outline with a 2 px offset. On an inverted block the outline takes
+`--color-inverse-text` instead, because the accent falls to 2.40:1 against
+`--color-inverse-bg` in Cocoa, under the 3:1 a focus indicator needs. A link
+that opens a new tab says so in its accessible name, "(opens in a new tab)".
+A list styled without bullets carries `role="list"`, which Safari otherwise
+drops, and with it the number of items. A chart is hidden from screen readers
+only when its figures are also given in text: a worded summary, a table, or the
+list beside it.
 
 ## Writing
 
