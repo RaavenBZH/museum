@@ -270,6 +270,14 @@ pnpm lint        # run ESLint over the whole project
 pnpm typecheck   # run the TypeScript compiler without emitting output
 pnpm test        # run the unit and component tests once
 pnpm test:watch  # run the tests in watch mode while developing
+pnpm test:e2e    # build, serve and run the end-to-end journeys in Chromium
+```
+
+The end-to-end tests need Playwright's Chromium, downloaded once (about
+100 MB):
+
+```bash
+pnpm exec playwright install chromium
 ```
 
 ## Architecture
@@ -290,6 +298,11 @@ pnpm test:watch  # run the tests in watch mode while developing
 │   └── gallery.png                   # screenshot of My Gallery
 ├── public
 │   └── favicon.svg                   # the logotype mark, following the browser's colour scheme
+├── e2e
+│   ├── discovery.spec.ts             # the journeys, in a real browser
+│   ├── collectionApiMock.ts          # answers every call to the museum from the fixtures
+│   └── fixtures                      # API responses recorded from the real museum, and a picture
+├── playwright.config.ts              # builds and serves the app, then runs the journeys in Chromium
 ├── vite.config.ts                    # Vite plugins (React, Tailwind), @ alias and Vitest setup
 ├── eslint.config.js                  # ESLint flat config, React Hooks rules enabled
 ├── tsconfig.json                     # project references and the @ path alias
@@ -565,7 +578,7 @@ listed, including the parts of this README.
 | Discover screen | Implemented the screen from my own design canvas: the run held above the router, one artwork shown and one held ahead, the random draw that skips the 15 % of objects the museum has never photographed, the artwork-title scale, the three-second pause on the action, and the tests | **Decided** the concept and the layout, drew both artboards, reported the two cases where no image appeared, and asked for the artwork to survive leaving the screen and coming back |
 | My Gallery | Kept every artwork Discover reveals in the browser's storage, wrote the completion ring with the shadcn/ui donut-with-text, the grid and list views, the pictures loaded only as they come into view, the opening of a seen artwork on Discover at `/discover/<id>`, the folded "More about my gallery" section with its century and medium charts, and their tests, to the measures of my mockup; two agents worked in parallel on the last changes, one on the card and one on the opening | **Decided** that the gallery keeps every artwork seen, that the ring shows the share of European Paintings seen, and that it loads lazily; sent two earlier versions — a chart of the museum by department — back because they did not follow the mockup |
 | Home page, shell and navigation | Wrote the bento home page, the artwork card, the navigation bar, the footer, the day / night switch, the router with its not-found page and error boundary, and their tests | **Decided** the landing layout from my mockup and asked for a router so that the discovery run survives moving between screens |
-| Tests | Wrote the unit, component and hook tests of every feature — about 400 tests in 74 files — and reproduced each bug it fixed with a test that fails without the fix | Asked for tests on every change, and ran the application to report the cases they did not catch |
+| Tests | Wrote the unit, component and hook tests of every feature — about 400 tests in 74 files — the Playwright journeys and their recorded fixtures, and reproduced each bug it fixed with a test that fails without the fix | Asked for tests on every change, and ran the application to report the cases they did not catch |
 | Commits | Proposed the split of the work into commits and their messages | Validated every message before the commit was made |
 | Code review | Reviews each component it writes against the two references it must follow — `docs/DESIGN_SYSTEM.md` and the React practices document — and reports every raw colour, off-scale spacing, accessibility slip and rule violation, so that files written at different moments stay harmonised | Asked for that review to run on every interface change before a commit; decided which findings to apply |
 
@@ -603,8 +616,24 @@ They cover every layer: the URL builders, the client, its queue and its cache
 (including the races between callers who leave and come back), the domain
 mappers and figures, the hooks and their storage, every component, every
 page and the shell's routes. The museum is never called: every test runs
-against fixtures or a simulated client. There is no end-to-end test in a real
-browser yet.
+against fixtures or a simulated client.
+
+End-to-end tests run with **Playwright**, in Chromium, against the production
+build served by `vite preview`:
+
+```bash
+pnpm exec playwright install chromium   # once
+pnpm test:e2e
+```
+
+They walk three journeys: from the home page to Discover, a second artwork,
+My Gallery counting both, the list layout and an artwork opened again at its
+own address; the charts of "More about my gallery" unfolded; and an address
+that names no artwork, answered with a way back. They never depend on the
+museum: `e2e/collectionApiMock.ts` intercepts every call to the API and to its
+image server and answers it from `e2e/fixtures/`, three object responses
+recorded from the real API, the department's identifier list cut down to
+those three, the counts by century and a placeholder picture.
 
 They also run in a container, with the linter and the type-checker:
 
