@@ -4,11 +4,15 @@ import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SeenArtwork } from '@/domain/seenArtwork';
 import { DiscoveryContext, type DiscoveryContextValue } from '@/hooks/DiscoveryContext';
+import { useCollectionCenturies } from '@/hooks/useCollectionCenturies';
 import { useDiscoveryCollectionSize } from '@/hooks/useDiscoveryCollectionSize';
 import { GalleryPage } from './GalleryPage';
 
 vi.mock('@/hooks/useDiscoveryCollectionSize', () => ({
   useDiscoveryCollectionSize: vi.fn(),
+}));
+vi.mock('@/hooks/useCollectionCenturies', () => ({
+  useCollectionCenturies: vi.fn(() => ({ counts: null, error: null, retry: vi.fn() })),
 }));
 
 const sizeMock = vi.mocked(useDiscoveryCollectionSize);
@@ -19,6 +23,8 @@ function seenArtwork(id: number, title: string): SeenArtwork {
     title,
     artistName: 'Vincent van Gogh',
     displayDate: '1889',
+    beginYear: 1889,
+    medium: 'Oil on canvas',
     imageUrl: null,
     repository: 'Metropolitan Museum of Art, New York, NY',
     size: null,
@@ -164,6 +170,20 @@ describe('GalleryPage', () => {
 
     expect(document.querySelector('.seen-artwork-list')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'List' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('asks for the counts by century only once the section is unfolded', async () => {
+    const user = userEvent.setup();
+    const centuriesMock = vi.mocked(useCollectionCenturies);
+
+    renderPage();
+
+    expect(centuriesMock).toHaveBeenLastCalledWith(false);
+
+    await user.click(screen.getByRole('button', { name: 'More about my gallery' }));
+
+    expect(centuriesMock).toHaveBeenLastCalledWith(true);
+    expect(screen.getByRole('heading', { name: 'By medium' })).toBeInTheDocument();
   });
 
   it('invites a visitor who has seen nothing to start', () => {

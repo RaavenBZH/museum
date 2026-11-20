@@ -39,6 +39,12 @@ export type Artwork = {
   artistLifeSpan: string | null;
   /** Free text from the API: "1889", "ca. 1830–32". To display, never to sort. */
   displayDate: string | null;
+  /**
+   * The year the work was begun, as a number: `objectBeginDate`, which the
+   * museum fills for every painting measured. It is what a work is sorted and
+   * counted by; `displayDate` is only ever shown.
+   */
+  beginYear: number | null;
   objectName: string | null;
   classification: string | null;
   culture: string | null;
@@ -82,6 +88,10 @@ function text(value: unknown): string | null {
   const trimmed = value.trim();
 
   return trimmed === '' ? null : trimmed;
+}
+
+function year(value: unknown): number | null {
+  return typeof value === 'number' && Number.isSafeInteger(value) ? value : null;
 }
 
 function flag(value: unknown): boolean {
@@ -142,6 +152,7 @@ export function toArtwork(resource: MetObjectResource): Artwork {
     artistNationality: text(resource.artistNationality),
     artistLifeSpan: lifeSpan(resource.artistBeginDate, resource.artistEndDate),
     displayDate: text(resource.objectDate),
+    beginYear: year(resource.objectBeginDate),
     objectName: text(resource.objectName),
     classification: text(resource.classification),
     culture: text(resource.culture),

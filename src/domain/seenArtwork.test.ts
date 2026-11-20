@@ -7,6 +7,8 @@ const kept = {
   title: 'Wheat Field with Cypresses',
   artistName: 'Vincent van Gogh',
   displayDate: '1889',
+  beginYear: 1889,
+  medium: 'Oil on canvas',
   imageUrl: 'https://images.metmuseum.org/web-large/DT1567.jpg',
   repository: 'Metropolitan Museum of Art, New York, NY',
   size: { heightCm: 73, widthCm: 93.4, depthCm: null },
@@ -17,7 +19,17 @@ describe('toSeenArtwork', () => {
     const seen = toSeenArtwork(buildArtwork());
 
     expect(Object.keys(seen).sort()).toEqual(
-      ['artistName', 'displayDate', 'id', 'imageUrl', 'repository', 'size', 'title'].sort(),
+      [
+        'artistName',
+        'beginYear',
+        'displayDate',
+        'id',
+        'imageUrl',
+        'medium',
+        'repository',
+        'size',
+        'title',
+      ].sort(),
     );
   });
 });
@@ -25,6 +37,22 @@ describe('toSeenArtwork', () => {
 describe('parseSeenArtworks', () => {
   it('reads back what was kept', () => {
     expect(parseSeenArtworks([kept])).toEqual([kept]);
+  });
+
+  it('keeps an artwork stored before its year and medium were kept, as unknown', () => {
+    const storedEarlier = {
+      id: kept.id,
+      title: kept.title,
+      artistName: kept.artistName,
+      displayDate: kept.displayDate,
+      imageUrl: kept.imageUrl,
+      repository: kept.repository,
+      size: kept.size,
+    };
+
+    expect(parseSeenArtworks([storedEarlier])).toEqual([
+      { ...storedEarlier, beginYear: null, medium: null },
+    ]);
   });
 
   it('keeps the absences the model allows', () => {

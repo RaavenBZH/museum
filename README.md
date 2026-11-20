@@ -37,6 +37,7 @@ Why these choices:
 | Artwork record at its own address, with an invalid address handled | `/discover/<id>` | **Detail view** |
 | My Gallery: every artwork seen, in a grid or a list | `/gallery` | **List** |
 | Completion ring: share of the collection seen | `/gallery` | **Chart** |
+| More about my gallery: centuries and mediums of the artworks seen | `/gallery` | Further charts |
 | Home page, not-found page, day and night modes | `/`, any unknown address | Navigation |
 
 The three screenshots below were taken in the night mode, Cocoa, on a desktop
@@ -153,6 +154,15 @@ browser 1,512 px wide.
   shadcn/ui donut-with-text, the share is written in its middle, and the sample
   is stated beside it. The total is the very list Discover draws from, so "the
   possible artworks" means the same thing on both screens.
+- **More about my gallery.** A folded section under the progress card unfolds
+  two bar charts, in numbers of works:
+  - **By century**: the artworks seen, by the century they were painted in.
+    Each bar's tooltip adds how many works the collection holds from that
+    century, counted with one `v1.1/search` query per century.
+  - **By medium**: what the artworks seen are made of, the most frequent first.
+
+  Folded, the section asks the museum for nothing: the eight counts are only
+  requested when it is opened, then kept for a day.
 - **Grid or list, and the choice is remembered.** The grid shows each picture
   at its real proportions. The list adds where each work is kept. A pointer
   over a row highlights it.
@@ -285,7 +295,8 @@ pnpm test:watch  # run the tests in watch mode while developing
     │   ├── requestQueue.ts           # spaces the calls, to stay under the IP block
     │   ├── responseCache.ts          # one answer per URL, with in-flight sharing
     │   ├── metMuseumClient.ts        # GET as JSON: status, queue, cache, abort
-    │   └── metMuseumObjects.ts       # the two object endpoints, read through the client
+    │   ├── metMuseumObjects.ts       # the two object endpoints, read through the client
+    │   └── metMuseumSearch.ts        # v1.1/search, read for how many works a period holds
     ├── domain                        # pure model: no React, no fetch
     │   ├── artwork.ts                # type Artwork and the mapper from the payload
     │   ├── artworkFacts.ts           # the rows and blocks of the record
@@ -295,6 +306,7 @@ pnpm test:watch  # run the tests in watch mode while developing
     │   ├── discoveryCollection.ts    # department 11, the collection Discover draws from
     │   ├── discoveryProgress.ts      # how much of it has been seen, and its figures
     │   ├── discoveryRoute.ts         # /discover/<id>, the address an artwork opens at
+    │   ├── galleryInsights.ts        # centuries and mediums of the artworks seen
     │   ├── seenArtwork.ts            # what My Gallery keeps of an artwork once seen
     │   └── themeModes.ts             # the Sand / Cocoa modes and their storage key
     ├── hooks                         # React state, held above the router
@@ -306,6 +318,7 @@ pnpm test:watch  # run the tests in watch mode while developing
     │   ├── useArtworkContemplation.ts # the three seconds an artwork is given
     │   ├── seenArtworksStorage.ts    # keeps the artworks seen in the browser
     │   ├── useDiscoveryCollectionSize.ts # how many artworks Discover can draw from
+    │   ├── useCollectionCenturies.ts # the collection counted by century, on demand
     │   ├── ThemeProvider.tsx         # resolves the mode, writes data-theme, persists it
     │   ├── ThemeContext.ts           # React context holding the current mode
     │   └── useTheme.ts               # reads the mode
@@ -321,8 +334,8 @@ pnpm test:watch  # run the tests in watch mode while developing
     │   ├── landing                   # headline block, action tile, closing banner
     │   ├── artwork                   # artwork card and artwork image
     │   ├── discover                  # stage, wall label, fact section, next-artwork band
-    │   ├── statistics                # the completion ring
-    │   ├── gallery                   # layout switch, grid, list, lazily loaded pictures, links to Discover
+    │   ├── statistics                # the completion ring, centuries and mediums charts
+    │   ├── gallery                   # layout switch, grid, list, lazy pictures, links, More about my gallery
     │   ├── icons                     # the seven icons of the system
     │   └── ui                        # button, badge, artwork year, shadcn/ui chart
     ├── lib
@@ -517,7 +530,7 @@ listed, including the parts of this README.
 | Design system | Wrote the specification under my direction, then installed it: the tokens, the two modes, the type scale, the logotype and favicon, the first components and `docs/DESIGN_SYSTEM.md` | **Decided** the visual direction and the constraints it had to satisfy; chose the terracotta accent pair; reviewed the result in both modes |
 | Collection API layer | Wrote the four layers that read the museum — URL builder, error types, request queue, response cache with in-flight sharing and abort, and the two object endpoints — with their tests, after measuring that the real limit is an IP block around 140 calls rather than the documented 80 requests per second | **Decided** to read `GET /objects` and chain `GET /objects/{objectID}` behind it so a detail call is only ever made with a valid identifier; reviewed the caching and the spacing |
 | Discover screen | Implemented the screen from my own design canvas: the run held above the router, one artwork shown and one held ahead, the random draw that skips the 15 % of objects the museum has never photographed, the artwork-title scale, the three-second pause on the action, and the tests | **Decided** the concept and the layout, drew both artboards, reported the two cases where no image appeared, and asked for the artwork to survive leaving the screen and coming back |
-| My Gallery | Kept every artwork Discover reveals in the browser's storage, wrote the completion ring with the shadcn/ui donut-with-text, the grid and list views, the pictures loaded only as they come into view, the opening of a seen artwork on Discover at `/discover/<id>`, and their tests, to the measures of my mockup; two agents worked in parallel on the last changes, one on the card and one on the opening | **Decided** that the gallery keeps every artwork seen, that the ring shows the share of European Paintings seen, and that it loads lazily; sent two earlier versions — a chart of the museum by department — back because they did not follow the mockup |
+| My Gallery | Kept every artwork Discover reveals in the browser's storage, wrote the completion ring with the shadcn/ui donut-with-text, the grid and list views, the pictures loaded only as they come into view, the opening of a seen artwork on Discover at `/discover/<id>`, the folded "More about my gallery" section with its century and medium charts, and their tests, to the measures of my mockup; two agents worked in parallel on the last changes, one on the card and one on the opening | **Decided** that the gallery keeps every artwork seen, that the ring shows the share of European Paintings seen, and that it loads lazily; sent two earlier versions — a chart of the museum by department — back because they did not follow the mockup |
 | Code review | Reviews each component it writes against the two references it must follow — `docs/DESIGN_SYSTEM.md` and the React practices document — and reports every raw colour, off-scale spacing, accessibility slip and rule violation, so that files written at different moments stay harmonised | Asked for that review to run on every interface change before a commit; decided which findings to apply |
 
 Three guidance documents used while building the project are kept outside the

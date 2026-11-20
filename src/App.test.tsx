@@ -131,6 +131,8 @@ describe('App', () => {
           title: 'Irises',
           artistName: 'Vincent van Gogh',
           displayDate: '1889',
+          beginYear: 1889,
+          medium: 'Oil on canvas',
           imageUrl: null,
           repository: null,
           size: null,

@@ -1,6 +1,7 @@
-import { useId } from 'react';
+import { useId, useState } from 'react';
 import { GalleryLayoutSwitch } from '@/components/gallery/GalleryLayoutSwitch';
 import { GalleryCollectionGroup } from '@/components/gallery/GalleryCollectionGroup';
+import { GalleryInsights } from '@/components/gallery/GalleryInsights';
 import { SeenArtworkGrid } from '@/components/gallery/SeenArtworkGrid';
 import { SeenArtworkList } from '@/components/gallery/SeenArtworkList';
 import { NoticePanel } from '@/components/layout/NoticePanel';
@@ -12,11 +13,13 @@ import {
   formatCount,
   formatShare,
 } from '@/domain/discoveryProgress';
+import { centuryCounts, mediumCounts } from '@/domain/galleryInsights';
 import {
   DISCOVERY_COLLECTION_DESCRIPTION,
   DISCOVERY_COLLECTION_NAME,
 } from '@/domain/discoveryCollection';
 import { useDiscovery } from '@/hooks/useDiscovery';
+import { useCollectionCenturies } from '@/hooks/useCollectionCenturies';
 import { useDiscoveryCollectionSize } from '@/hooks/useDiscoveryCollectionSize';
 import { useGalleryLayout } from '@/hooks/useGalleryLayout';
 
@@ -35,15 +38,23 @@ import { useGalleryLayout } from '@/hooks/useGalleryLayout';
  * seen is the one a visitor is most likely to come looking for. Each picture
  * is fetched only as it comes near the screen.
  *
- * It is a container: it reads the run, the collection size and the layout
- * the visitor last chose, and hands everything to presentation components as
- * props.
+ * Under the card, "More about my gallery" unfolds two more charts — the
+ * centuries explored and the mediums met — so the
+ * figures of the gallery answer more than one question.
+ *
+ * It is a container: it reads the run, the collection size, the layout the
+ * visitor last chose and, once the section is open, the counts by century,
+ * and hands everything to presentation components as props.
  */
 export function GalleryPage() {
   const titleId = useId();
   const { seen } = useDiscovery();
   const { collectionSize, error, retry } = useDiscoveryCollectionSize();
   const [layout, setLayout] = useGalleryLayout();
+  // Whether "More about my gallery" is unfolded. It is the page's, not the
+  // section's, because opening it is what asks the museum for the counts.
+  const [areInsightsOpen, setAreInsightsOpen] = useState(false);
+  const centuries = useCollectionCenturies(areInsightsOpen);
 
   const newestFirst = [...seen].reverse();
 
@@ -76,6 +87,16 @@ export function GalleryPage() {
           collectionSize={collectionSize}
         />
       )}
+
+      <GalleryInsights
+        className="gallery-page__insights mt-6"
+        isOpen={areInsightsOpen}
+        onToggle={() => setAreInsightsOpen((isOpen) => !isOpen)}
+        centuries={centuries.counts === null ? null : centuryCounts(centuries.counts, seen)}
+        centuriesError={centuries.error}
+        onRetryCenturies={centuries.retry}
+        mediums={mediumCounts(seen)}
+      />
 
       <div className="gallery-page__toolbar mt-11 mb-10 flex justify-end">
         <GalleryLayoutSwitch layout={layout} onLayoutChange={setLayout} />

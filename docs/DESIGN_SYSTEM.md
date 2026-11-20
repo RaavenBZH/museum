@@ -224,6 +224,7 @@ Built, with their tests beside them:
 | `HeadlineBlock`, `ActionTile`, `ClosingBanner` | [`src/components/landing/`](../src/components/landing/)                 |
 | `ArtworkStage`, `ArtworkCartel`, `ArtworkFactSection`, `NextArtworkBar` | [`src/components/discover/`](../src/components/discover/) |
 | `NoticePanel`, `ErrorBoundary` | [`src/components/layout/`](../src/components/layout/)                                   |
+| `GalleryInsights`, `CenturyComparisonChart`, `MediumBreakdownChart` | [`src/components/gallery/`](../src/components/gallery/), [`src/components/statistics/`](../src/components/statistics/) |
 | `CompletionDonutChart`     | [`src/components/statistics/CompletionDonutChart.tsx`](../src/components/statistics/CompletionDonutChart.tsx) |
 | `GalleryLayoutSwitch`, `GalleryCollectionGroup`, `SeenArtworkGrid`, `SeenArtworkList`, `SeenArtworkPicture` | [`src/components/gallery/`](../src/components/gallery/) |
 | `ChartContainer`, `ChartTooltip` (vendored from shadcn/ui) | [`src/components/ui/chart.tsx`](../src/components/ui/chart.tsx) |
@@ -559,6 +560,23 @@ Gallery mockup: the progress card, the layout switch, then the artworks seen.
   been seen, one `text-lead` line in `--color-text-muted` says out of what —
   the one fact a chart must state about its sample. The ring already gives the
   share, so the text does not repeat it.
+- **`GalleryInsights`**: "More about my gallery", a secondary button with the
+  chevron, 24 px under the progress card, folding a panel of two
+  `rounded-card` surfaces on seven and five columns (one column below
+  761 px), each with an accent-dot heading in `text-caption-title`, one
+  `text-lead` line stating the question, and the chart — nothing else. The
+  panel stays in the page under `hidden`, as the wall label's record does.
+- **`CenturyComparisonChart`**: one accent bar per century, the axis in
+  numbers of works, with 2 px tops, a grid of horizontal lines in
+  `--color-surface-muted` and `text-mono` ticks. One series, so no legend. The
+  collection's count of each century is in the tooltip: drawn beside the
+  visitor's few works, its hundreds would flatten them, and a second axis is
+  not allowed. The drawing is hidden from screen readers, which read the same
+  figures from a visually hidden table.
+- **`MediumBreakdownChart`**: ranked bars, one per medium — the label in
+  `text-caption-title`, the count in `text-mono`, an 8 px accent bar on a
+  `--color-surface-muted` track, as long as its count against the most
+  frequent medium.
 - **`GalleryLayoutSwitch`**: Grid or List, the pill group of the mode switch —
   `--color-surface`, 4 px of padding, the side in use in the inverted pill and
   `aria-pressed`, each side 44 px tall with its icon and its word in

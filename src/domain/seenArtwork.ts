@@ -13,13 +13,22 @@ import type { Artwork } from '@/domain/artwork';
  */
 export type SeenArtwork = Pick<
   Artwork,
-  'id' | 'title' | 'artistName' | 'displayDate' | 'imageUrl' | 'repository' | 'size'
+  | 'id'
+  | 'title'
+  | 'artistName'
+  | 'displayDate'
+  | 'beginYear'
+  | 'medium'
+  | 'imageUrl'
+  | 'repository'
+  | 'size'
 >;
 
 export function toSeenArtwork(artwork: Artwork): SeenArtwork {
-  const { id, title, artistName, displayDate, imageUrl, repository, size } = artwork;
+  const { id, title, artistName, displayDate, beginYear, medium, imageUrl, repository, size } =
+    artwork;
 
-  return { id, title, artistName, displayDate, imageUrl, repository, size };
+  return { id, title, artistName, displayDate, beginYear, medium, imageUrl, repository, size };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -32,6 +41,20 @@ function nullableText(value: unknown): string | null | undefined {
   }
 
   return typeof value === 'string' ? value : undefined;
+}
+
+/**
+ * The year and the medium were added to what is kept after the gallery had
+ * started keeping artworks, so an entry written before may not have them: it
+ * is read as unknown rather than dropped, and the artwork stays in the
+ * gallery.
+ */
+function storedYear(value: unknown): number | null | undefined {
+  if (value === undefined || value === null) {
+    return null;
+  }
+
+  return typeof value === 'number' && Number.isSafeInteger(value) ? value : undefined;
 }
 
 function storedSize(value: unknown): SeenArtwork['size'] | undefined {
@@ -58,6 +81,9 @@ function storedArtwork(value: unknown): SeenArtwork | null {
 
   const artistName = nullableText(value.artistName);
   const displayDate = nullableText(value.displayDate);
+  const beginYear = storedYear(value.beginYear);
+  // Missing on an entry kept before the medium was: unknown, not invalid.
+  const medium = value.medium === undefined ? null : nullableText(value.medium);
   const imageUrl = nullableText(value.imageUrl);
   const repository = nullableText(value.repository);
   const size = storedSize(value.size);
@@ -65,6 +91,8 @@ function storedArtwork(value: unknown): SeenArtwork | null {
   if (
     artistName === undefined ||
     displayDate === undefined ||
+    beginYear === undefined ||
+    medium === undefined ||
     imageUrl === undefined ||
     repository === undefined ||
     size === undefined
@@ -77,6 +105,8 @@ function storedArtwork(value: unknown): SeenArtwork | null {
     title: value.title,
     artistName,
     displayDate,
+    beginYear,
+    medium,
     imageUrl,
     repository,
     size,

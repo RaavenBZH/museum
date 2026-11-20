@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { objectIdsUrl, objectUrl } from './metMuseumEndpoints';
+import { departmentPeriodSearchUrl, objectIdsUrl, objectUrl } from './metMuseumEndpoints';
 
 describe('objectIdsUrl', () => {
   it('addresses the whole collection when no filter is given', () => {
@@ -16,6 +16,25 @@ describe('objectIdsUrl', () => {
     expect(() => objectIdsUrl({ departmentIds: [] })).toThrow(RangeError);
     expect(() => objectIdsUrl({ departmentIds: [0] })).toThrow(RangeError);
     expect(() => objectIdsUrl({ departmentIds: [1.5] })).toThrow(RangeError);
+  });
+});
+
+describe('departmentPeriodSearchUrl', () => {
+  it('counts one department over a span of years, through the search the museum kept', () => {
+    // v1.1 is the only version that still serves search, and it requires a
+    // query: `*` asks for every record.
+    expect(departmentPeriodSearchUrl(11, { beginYear: 1800, endYear: 1899 })).toBe(
+      'https://collectionapi.metmuseum.org/public/collection/v1.1/search?q=*&departmentId=11&dateBegin=1800&dateEnd=1899',
+    );
+  });
+
+  it('refuses a span that runs backwards, or a department that cannot exist', () => {
+    expect(() => departmentPeriodSearchUrl(11, { beginYear: 1900, endYear: 1800 })).toThrow(
+      RangeError,
+    );
+    expect(() => departmentPeriodSearchUrl(0, { beginYear: 1800, endYear: 1899 })).toThrow(
+      RangeError,
+    );
   });
 });
 

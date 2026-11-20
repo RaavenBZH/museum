@@ -60,6 +60,7 @@ export function buildArtwork(overrides: Partial<Artwork> = {}): Artwork {
     artistNationality: 'Dutch',
     artistLifeSpan: '1853 – 1890',
     displayDate: '1889',
+    beginYear: 1889,
     objectName: 'Painting',
     classification: 'Paintings',
     culture: null,
