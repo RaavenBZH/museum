@@ -34,10 +34,10 @@ Why these choices:
 | Feature | Where | Minimum it covers |
 | --- | --- | --- |
 | Discover: one random artwork at a time, with its full record | `/discover` | — |
-| Artwork record at its own address, with an invalid address handled | `/discover/<id>` | **Detail view** (REQ-02) |
-| My Gallery: every artwork seen, in a grid or a list | `/gallery` | **List** (REQ-01) |
-| Completion ring: share of the collection seen | `/gallery` | **Chart** (REQ-03) |
-| Home page, not-found page, day and night modes | `/`, any unknown address | Navigation (REQ-04) |
+| Artwork record at its own address, with an invalid address handled | `/discover/<id>` | **Detail view** |
+| My Gallery: every artwork seen, in a grid or a list | `/gallery` | **List** |
+| Completion ring: share of the collection seen | `/gallery` | **Chart** |
+| Home page, not-found page, day and night modes | `/`, any unknown address | Navigation |
 
 The three screenshots below were taken in the night mode, Cocoa, on a desktop
 browser 1,512 px wide.
@@ -344,12 +344,6 @@ chain: it takes props and nothing else, which is why the display mode and the
 discovery run are read in `App.tsx` and handed down rather than reached for
 from inside a component.
 
-Both React contexts are created with `null` as their default and their hooks
-throw when they are used outside their provider, instead of handing out a
-default value of the right shape. A provider missing from the tree is a
-programming mistake, and a named error caught by the boundary says so, where a
-half-state would fail somewhere else and later.
-
 ### AI-assisted Design system
 
 The interface follows the **Sand / Cocoa** design system, described in
@@ -414,11 +408,25 @@ reaches a colour, a type style or a radius.
 
 ### The museum blocks a client that asks too often — and sometimes just stops answering
 
-The API documents 80 requests per second. Measured, about 140 calls in a few
-minutes earn a 403 on every endpoint for roughly five minutes, and under
-heavier use it also leaves requests hanging: on 2026-11-19, three object reads
-out of four were still unanswered after 30 seconds, while the identifier list
-answered in 2. A screen waiting on such a call would say "loading" forever.
+The API documents 80 requests per second. The real behaviour is harsher, and
+it was measured rather than taken from the documentation: the probes below were
+AI-assisted — Claude Code ran them from a terminal, with `curl` and short
+scripts against the live API — and I reviewed the results before the design was
+changed to answer them.
+
+- **The IP block.** On 2026-11-09, a survey of field fill rates read 12 to 50
+  objects in each of six departments, one request after the other. After about
+  140 requests in a few minutes, every endpoint answered 403, `v1/departments`
+  included, and the block lifted by itself after roughly five minutes. Running
+  the same survey again with the calls spaced 0.4 seconds apart never
+  triggered it.
+- **The hanging requests.** On 2026-11-19, after some forty further object
+  reads made for other measurements, Discover stayed on "Opening the
+  artwork…". Single reads timed with `curl` and a 30-second limit showed why:
+  three object reads out of four were still unanswered after 30 seconds and the
+  fourth took 13.5, while the department's identifier list answered in 2.2. The
+  museum's throttling does not always refuse; it can simply stop answering, and
+  a screen waiting on such a call would say "loading" forever.
 
 How it was solved, in `src/api/`:
 
@@ -437,23 +445,6 @@ How it was solved, in `src/api/`:
 - **No call for an identifier that cannot exist.** An identifier is checked
   against the cached list of the department before `GET /objects/{id}` is
   addressed, so a bad address fails without spending a call.
-
-### `v1/search` is gone, and `v1.1/search` cannot do what discovery needs
-
-The assignment asks for `v1.1/search`, since `v1/search` was withdrawn on
-1 October 2026. The application reads `GET /objects?departmentIds=11` and
-`GET /objects/{id}` instead, for three measured reasons:
-
-- **It needs the department's whole identifier list.** Drawing uniformly at
-  random, and checking an address before calling the museum, both require it.
-  `/objects` returns it in one call; `v1.1/search` returns at most 500
-  identifiers per call, so the same list costs six.
-- **`hasImages` does not say what the API will serve.** Cross-checked against
-  the department's list, `v1.1/search?hasImages=true` reports 2,647 works with
-  an image out of 2,650. Yet object 437107, Monet's *The Parc Monceau*, is in
-  that set and has no picture at all in the API.
-- **The two endpoints do not even agree on the department's size.** They
-  report 2,650 and 2,722 works respectively.
 
 ### About one artwork in seven comes back without a picture
 
@@ -499,27 +490,14 @@ invisible.
 
 ### The rest of the loading path
 
-- **The chart library is split off.** Recharts weighs 100 kB gzipped against
-  110 kB for the rest of the application, so the gallery's screen is loaded
-  with `React.lazy`. The first screen never waits for it. Once that screen is
-  idle, the shell fetches the gallery's chunk in the background
-  (`requestIdleCallback`, with a 3-second deadline), so opening My Gallery does
-  not wait for it either.
-- **Connections are opened early.** `index.html` preconnects to the API and to
-  the image server, so the first call and the first picture do not pay for the
-  connection setup.
-- **What changes rarely is kept in the browser.** Four things live in
-  `localStorage`, every access guarded so that a private window or blocked
-  storage only loses the convenience:
-  - the artworks seen (`museum:seen-artworks`);
-  - the size of the collection (`museum:discovery-collection-size`), so the
-    ring is drawn on arrival rather than after the two seconds the identifier
-    list takes;
-  - the gallery layout (`museum:gallery-layout`);
-  - the colour mode (`museum:theme-mode`).
-- **Nothing is drawn before it is needed.** Opening the application spends no
-  call: the first draw happens when the visitor arrives on Discover, not when
-  the application starts.
+- **Lazy chart.** Recharts (100 kB gzipped) loads with the gallery through
+  `React.lazy`, prefetched in the background once the first screen is idle.
+- **Early connections.** `index.html` preconnects to the API and the image
+  server.
+- **Browser storage.** The artworks seen, the collection size, the gallery
+  layout and the colour mode are kept in `localStorage`, so the gallery and
+  its ring appear at once. A blocked storage only loses the convenience.
+- **No call at start-up.** The first draw happens on arriving at Discover.
 
 ## AI usage
 
