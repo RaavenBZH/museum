@@ -49,6 +49,20 @@ export class MetMuseumNetworkError extends Error {
   }
 }
 
+/**
+ * The museum took longer than the client waits. It is what the museum's
+ * throttling often looks like from here: no 403, just a request left hanging.
+ */
+export class MetMuseumTimeoutError extends Error {
+  readonly url: string;
+
+  constructor(url: string, timeoutMs: number) {
+    super(`The Met collection API did not answer within ${timeoutMs / 1000} s.`);
+    this.name = 'MetMuseumTimeoutError';
+    this.url = url;
+  }
+}
+
 /** A successful response whose body is not the JSON shape the endpoint promises. */
 export class MetMuseumPayloadError extends Error {
   readonly url: string;

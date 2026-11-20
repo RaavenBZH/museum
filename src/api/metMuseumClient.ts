@@ -2,6 +2,7 @@ import {
   httpErrorForStatus,
   MetMuseumNetworkError,
   MetMuseumPayloadError,
+  MetMuseumTimeoutError,
 } from './metMuseumErrors';
 import { createRequestQueue, type RequestQueue } from './requestQueue';
 import { createResponseCache, type ResponseCache } from './responseCache';
@@ -35,8 +36,19 @@ export type MetMuseumClient = {
   getJson: <T>(url: string, options?: GetJsonOptions) => Promise<T>;
 };
 
+/**
+ * How long one call may take, body included, before it is given up. A
+ * healthy answer takes well under two seconds; the museum's throttling can
+ * leave a request hanging for a minute or more. Without a bound the screen
+ * waiting on that request would say "loading" forever — with one, it says the
+ * museum is not answering and offers to try again.
+ */
+const DEFAULT_REQUEST_TIMEOUT_MS = 20_000;
+
 export type MetMuseumClientOptions = {
   fetchImpl?: typeof fetch;
+  /** Replaced by the tests, so that a timeout can be observed without waiting. */
+  requestTimeoutMs?: number;
   queue?: RequestQueue;
   cache?: ResponseCache;
 };
@@ -75,6 +87,7 @@ function raceAbort<T>(call: Promise<T>, signal: AbortSignal, onAbandon?: () => v
 export function createMetMuseumClient(options: MetMuseumClientOptions = {}): MetMuseumClient {
   const {
     fetchImpl = globalThis.fetch.bind(globalThis),
+    requestTimeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
     queue = createRequestQueue(),
     cache = createResponseCache(),
   } = options;
@@ -88,24 +101,49 @@ export function createMetMuseumClient(options: MetMuseumClientOptions = {}): Met
       throw abortError(signal);
     }
 
-    let response: Response;
+    // One signal for `fetch` that ends the call either way: every caller gave
+    // up, or the museum took too long. Reading the body is covered too, since
+    // a response can arrive and then stall.
+    const call = new AbortController();
+    const giveUp = () => call.abort();
+    const timer = setTimeout(giveUp, requestTimeoutMs);
+
+    signal.addEventListener('abort', giveUp, { once: true });
+
+    // An abort reaches `fetch` and the body as a rejection like any other; it
+    // is not a fault of the museum's and must not be reported as one.
+    const failure = (fallback: () => Error): unknown => {
+      if (signal.aborted) {
+        return abortError(signal);
+      }
+
+      return call.signal.aborted ? new MetMuseumTimeoutError(url, requestTimeoutMs) : fallback();
+    };
 
     try {
-      response = await fetchImpl(url, { headers: { Accept: 'application/json' }, signal });
-    } catch (cause) {
-      // An abort reaches `fetch` as a rejection like any other; it is not a
-      // fault of the museum's and must not be reported as one.
-      throw signal.aborted ? abortError(signal) : new MetMuseumNetworkError(url, cause);
-    }
+      let response: Response;
 
-    if (!response.ok) {
-      throw httpErrorForStatus(response.status, url);
-    }
+      try {
+        response = await fetchImpl(url, {
+          headers: { Accept: 'application/json' },
+          signal: call.signal,
+        });
+      } catch (cause) {
+        throw failure(() => new MetMuseumNetworkError(url, cause));
+      }
 
-    try {
-      return await response.json();
-    } catch (cause) {
-      throw new MetMuseumPayloadError(url, 'the body is not valid JSON', cause);
+      if (!response.ok) {
+        throw httpErrorForStatus(response.status, url);
+      }
+
+      try {
+        return await response.json();
+      } catch (cause) {
+        throw failure(() => new MetMuseumPayloadError(url, 'the body is not valid JSON', cause));
+      }
+    } finally {
+      clearTimeout(timer);
+      signal.removeEventListener('abort', giveUp);
     }
   }
 

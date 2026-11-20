@@ -19,30 +19,39 @@ function createTestClock() {
 }
 
 describe('createRequestQueue', () => {
-  it('runs one task at a time, in the order they were scheduled', async () => {
+  it('starts the tasks in the order they were scheduled', async () => {
     const clock = createTestClock();
     const queue = createRequestQueue({ minIntervalMs: 400, now: clock.now, delay: clock.delay });
-    const events: string[] = [];
-    let releaseFirst = () => {};
+    const started: string[] = [];
 
-    const first = queue.schedule(async () => {
-      events.push('first started');
-      await new Promise<void>((resolve) => {
-        releaseFirst = resolve;
-      });
-      events.push('first done');
-    });
-    const second = queue.schedule(async () => {
-      events.push('second started');
-    });
+    await Promise.all([
+      queue.schedule(async () => started.push('first')),
+      queue.schedule(async () => started.push('second')),
+      queue.schedule(async () => started.push('third')),
+    ]);
 
-    await Promise.resolve();
-    expect(events).toEqual(['first started']);
+    expect(started).toEqual(['first', 'second', 'third']);
+  });
 
-    releaseFirst();
-    await Promise.all([first, second]);
+  it('never lets a call that hangs hold the ones behind it', async () => {
+    const clock = createTestClock();
+    const queue = createRequestQueue({ minIntervalMs: 400, now: clock.now, delay: clock.delay });
 
-    expect(events).toEqual(['first started', 'first done', 'second started']);
+    // What the museum does when it throttles: a request that never answers.
+    void queue.schedule(() => new Promise<never>(() => {}));
+
+    await expect(queue.schedule(async () => 'next')).resolves.toBe('next');
+  });
+
+  it('still spaces the start of a call from the start of the one before', async () => {
+    const clock = createTestClock();
+    const delay = vi.fn(clock.delay);
+    const queue = createRequestQueue({ minIntervalMs: 400, now: clock.now, delay });
+
+    void queue.schedule(() => new Promise<never>(() => {}));
+    await queue.schedule(async () => 'second');
+
+    expect(delay).toHaveBeenCalledWith(400);
   });
 
   it('waits for the interval between two calls', async () => {

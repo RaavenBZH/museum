@@ -6,6 +6,7 @@ import {
   MetMuseumNotFoundError,
   MetMuseumPayloadError,
   MetMuseumRateLimitError,
+  MetMuseumTimeoutError,
 } from './metMuseumErrors';
 import { createRequestQueue } from './requestQueue';
 
@@ -166,5 +167,147 @@ describe('createMetMuseumClient', () => {
       client.getJson(url, { signal: AbortSignal.abort() }),
     ).rejects.toMatchObject({ name: 'AbortError' });
     expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it('gives up a call the museum leaves hanging, and says so', async () => {
+    // What the museum's throttling looks like: no answer at all, until the
+    // caller lets go.
+    const fetchImpl = vi.fn(
+      (_url: string, init?: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener('abort', () => reject(new DOMException('', 'AbortError')));
+        }),
+    );
+    const client = createMetMuseumClient({
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      queue: immediateQueue(),
+      requestTimeoutMs: 10,
+    });
+
+    await expect(client.getJson(url)).rejects.toBeInstanceOf(MetMuseumTimeoutError);
+  });
+
+  it('does not keep a timed-out call, so the next one asks the museum again', async () => {
+    let answer = false;
+    const fetchImpl = vi.fn(
+      (_url: string, init?: RequestInit) =>
+        new Promise<Response>((resolve, reject) => {
+          if (answer) {
+            resolve(jsonResponse({ total: 1 }));
+
+            return;
+          }
+
+          init?.signal?.addEventListener('abort', () => reject(new DOMException('', 'AbortError')));
+        }),
+    );
+    const client = createMetMuseumClient({
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      queue: immediateQueue(),
+      requestTimeoutMs: 10,
+    });
+
+    await expect(client.getJson(url)).rejects.toBeInstanceOf(MetMuseumTimeoutError);
+
+    answer = true;
+
+    await expect(client.getJson(url)).resolves.toEqual({ total: 1 });
+  });
+
+  it('reports a caller who left as an abort, not as a timeout', async () => {
+    const fetchImpl = vi.fn(
+      (_url: string, init?: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener('abort', () => reject(new DOMException('', 'AbortError')));
+        }),
+    );
+    const client = createMetMuseumClient({
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      queue: immediateQueue(),
+      requestTimeoutMs: 60_000,
+    });
+    const controller = new AbortController();
+    const leaving = client.getJson(url, { signal: controller.signal });
+
+    // Let the call reach `fetch` before leaving.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    controller.abort();
+
+    await expect(leaving).rejects.toMatchObject({ name: 'AbortError' });
+  });
+
+  /** A museum that holds every call open until the test lets it answer. */
+  function heldMuseum() {
+    const signals: AbortSignal[] = [];
+    const answers: (() => void)[] = [];
+    const fetchImpl = vi.fn(
+      (_url: string, init?: RequestInit) =>
+        new Promise<Response>((resolve, reject) => {
+          if (init?.signal) {
+            signals.push(init.signal);
+          }
+
+          answers.push(() => resolve(jsonResponse({ total: 1 })));
+          init?.signal?.addEventListener('abort', () => reject(new DOMException('', 'AbortError')));
+        }),
+    );
+
+    return { fetchImpl, signals, answerAll: () => answers.forEach((answer) => answer()) };
+  }
+
+  /** Lets every pending rejection and queue slot settle. */
+  const settle = () => new Promise((resolve) => setTimeout(resolve, 10));
+
+  it('keeps one request for a caller who leaves, comes back, and is joined by another', async () => {
+    const museum = heldMuseum();
+    const client = clientWith(museum.fetchImpl as unknown as typeof fetch);
+    const first = new AbortController();
+
+    // A remount: abandon the wait, take it up again in the same turn — React
+    // does exactly this in development.
+    const abandoned = client.getJson(url, { signal: first.signal });
+    first.abort();
+    const remounted = client.getJson(url, { signal: new AbortController().signal });
+
+    await expect(abandoned).rejects.toMatchObject({ name: 'AbortError' });
+    // The abandoned call has now settled, while the new one is still open.
+    await settle();
+
+    const joining = client.getJson(url);
+
+    await settle();
+    museum.answerAll();
+
+    await expect(remounted).resolves.toEqual({ total: 1 });
+    await expect(joining).resolves.toEqual({ total: 1 });
+    // One request for the three of them, not a second sent behind its back.
+    expect(museum.fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it('can still drop the request once every caller of a rejoined call has left', async () => {
+    const museum = heldMuseum();
+    const client = clientWith(museum.fetchImpl as unknown as typeof fetch);
+    const first = new AbortController();
+    const second = new AbortController();
+    const third = new AbortController();
+
+    const abandoned = client.getJson(url, { signal: first.signal });
+    first.abort();
+    const remounted = client.getJson(url, { signal: second.signal });
+
+    await expect(abandoned).rejects.toMatchObject({ name: 'AbortError' });
+    await settle();
+
+    const joining = client.getJson(url, { signal: third.signal });
+
+    await settle();
+    second.abort();
+    third.abort();
+
+    await expect(remounted).rejects.toMatchObject({ name: 'AbortError' });
+    await expect(joining).rejects.toMatchObject({ name: 'AbortError' });
+    // No request is left running with nobody waiting for it.
+    expect(museum.signals.length).toBeGreaterThan(0);
+    expect(museum.signals.every((signal) => signal.aborted)).toBe(true);
   });
 });

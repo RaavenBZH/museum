@@ -3,7 +3,16 @@
  * harsher: about 140 calls in a few minutes earn a 403 on every endpoint for
  * roughly five minutes. Spacing the calls 400 ms apart avoided the block
  * entirely, so every call of the transport layer goes through this queue:
- * one request at a time, never closer than `minIntervalMs`.
+ * calls start in the order they were asked for, never closer than
+ * `minIntervalMs`.
+ *
+ * It spaces the **starts** and does not wait for a call to end. The museum's
+ * throttling does not always answer with a 403: it can also leave a request
+ * hanging for a minute. A queue that waited for each call to finish would let
+ * that one request hold every call behind it — the next draw, the artwork a
+ * visitor asked to open — and the whole application would stop answering
+ * while the museum was merely slow on one object. What protects against the
+ * block is how often calls start, and that is what is kept.
  */
 const DEFAULT_MIN_REQUEST_INTERVAL_MS = 400;
 
@@ -37,7 +46,9 @@ export function createRequestQueue(options: RequestQueueOptions = {}): RequestQu
 
   return {
     schedule<T>(task: () => Promise<T>): Promise<T> {
-      const scheduled = tail.then(async () => {
+      // The chain holds the waiting only: it moves on as soon as this call's
+      // slot has come, whatever the call then does.
+      const slot = tail.then(async () => {
         const waitMs = nextSlotAt - now();
 
         if (waitMs > 0) {
@@ -45,16 +56,11 @@ export function createRequestQueue(options: RequestQueueOptions = {}): RequestQu
         }
 
         nextSlotAt = now() + minIntervalMs;
-
-        return task();
       });
 
-      // The chain must survive a failing task, otherwise one error would stop
-      // every later call; the rejection still reaches the caller through
-      // `scheduled`.
-      tail = scheduled.catch(() => undefined);
+      tail = slot;
 
-      return scheduled;
+      return slot.then(task);
     },
   };
 }

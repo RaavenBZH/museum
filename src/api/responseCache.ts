@@ -91,16 +91,26 @@ export function createResponseCache(options: ResponseCacheOptions = {}): Respons
         return alreadyPending as Promise<T>;
       }
 
-      const call = load().then(
-        (value) => {
+      // A call only ever removes its own entry: one that was forgotten — an
+      // abandoned request — settles after the request that replaced it has
+      // been registered, and clearing the key then would leave that one
+      // unlisted, so the next caller would start a third.
+      const settle = () => {
+        if (pending.get(key) === call) {
           pending.delete(key);
+        }
+      };
+
+      const call: Promise<T> = load().then(
+        (value) => {
+          settle();
           remember(key, value, ttlMs);
 
           return value;
         },
         (error: unknown) => {
           // A failure is not a result: the next caller must be free to retry.
-          pending.delete(key);
+          settle();
 
           throw error;
         },

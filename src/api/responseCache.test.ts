@@ -100,6 +100,34 @@ describe('createResponseCache', () => {
     expect(load).toHaveBeenCalledTimes(1);
   });
 
+  it('never lets a forgotten call unlist the call that replaced it', async () => {
+    const cache = createResponseCache();
+    let abandonForgotten = () => {};
+    // An abandoned request ends in a rejection, which is never remembered.
+    const forgotten = cache.load(
+      'key',
+      () =>
+        new Promise<string>((_resolve, reject) => {
+          abandonForgotten = () => reject(new Error('abandoned'));
+        }),
+    );
+
+    cache.forget('key');
+
+    const replacing = vi.fn(() => new Promise<string>(() => {}));
+    void cache.load('key', replacing);
+
+    abandonForgotten();
+    await expect(forgotten).rejects.toThrow('abandoned');
+
+    // The replacing call is still the one a newcomer joins.
+    const newcomer = vi.fn(async () => 'third');
+    void cache.load('key', newcomer);
+
+    expect(replacing).toHaveBeenCalledTimes(1);
+    expect(newcomer).not.toHaveBeenCalled();
+  });
+
   it('keeps what it knows when a call in flight is forgotten', async () => {
     const cache = createResponseCache();
 
